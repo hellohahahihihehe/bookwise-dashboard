@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookWise · Growth Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.5}
+.wrap{max-width:1380px;margin:0 auto;padding:28px 24px}
+
+/* ── Header ── */
+header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:28px;border-bottom:1px solid #30363d;margin-bottom:32px}
+header h1{font-size:24px;font-weight:700;color:#fff;letter-spacing:-0.3px}
+.h-sub{color:#8b949e;font-size:13px;margin-top:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:600;background:#21262d;color:#8b949e;border:1px solid #30363d}
+.badge-live{background:rgba(63,185,80,.15);color:#3fb950;border-color:rgba(63,185,80,.3)}
+.h-meta{text-align:right;font-size:12px;color:#8b949e}
+.h-meta strong{display:block;font-size:13px;color:#e6edf3;margin-bottom:2px}
+
+/* ── Section titles ── */
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8b949e;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.sec-title::after{content:'';flex:1;height:1px;background:#21262d}
+section{margin-bottom:36px}
+
+/* ── Scorecards ── */
+.sc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.sc{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:18px 20px;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.sc.red::before{background:#f85149}.sc.yellow::before{background:#d29922}.sc.green::before{background:#3fb950}
+.sc-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#8b949e;margin-bottom:8px}
+.sc-val{font-size:32px;font-weight:800;line-height:1;margin-bottom:6px}
+.sc.red .sc-val{color:#f85149}.sc.yellow .sc-val{color:#d29922}.sc.green .sc-val{color:#3fb950}
+.sc-bench{font-size:11px;color:#6e7681;margin-bottom:6px}
+.sc-status{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.sc.red .sc-status{background:rgba(248,81,73,.12);color:#f85149}
+.sc.yellow .sc-status{background:rgba(210,153,34,.12);color:#d29922}
+.sc.green .sc-status{background:rgba(63,185,80,.12);color:#3fb950}
+.sc-note{font-size:11px;color:#6e7681}
+
+/* ── Readout ── */
+.readout{background:#161b22;border:1px solid #30363d;border-left:3px solid #d29922;border-radius:8px;padding:18px 22px}
+.ro-title{font-size:13px;font-weight:700;color:#d29922;margin-bottom:14px}
+.ro-row{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid #21262d;align-items:flex-start}
+.ro-row:last-child{border-bottom:none;padding-bottom:0}
+.dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.dot.red{background:#f85149}.dot.yellow{background:#d29922}.dot.green{background:#3fb950}
+.ro-text{font-size:13px;color:#8b949e;line-height:1.6}
+.ro-text strong{color:#e6edf3;font-weight:600}
+
+/* ── Charts ── */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:18px 20px}
+.ct-title{font-size:13px;font-weight:600;color:#e6edf3;margin-bottom:2px}
+.ct-sub{font-size:11px;color:#6e7681;margin-bottom:14px}
+.ct-wrap{position:relative;height:195px}
+
+/* ── Funnel ── */
+.funnel-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.funnel-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:18px 20px}
+.fn-title{font-size:13px;font-weight:600;color:#e6edf3;margin-bottom:2px}
+.fn-sub{font-size:11px;color:#6e7681;margin-bottom:18px}
+.fn-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.fn-lbl{width:148px;font-size:12px;color:#8b949e;text-align:right;flex-shrink:0}
+.fn-bar-bg{flex:1;background:#21262d;border-radius:3px;height:28px;position:relative;overflow:hidden}
+.fn-bar{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:700;min-width:28px;transition:width .6s ease}
+.fn-pct{width:44px;font-size:12px;font-weight:700;text-align:right;flex-shrink:0}
+.fn-drop{width:54px;font-size:11px;color:#f85149;text-align:right;flex-shrink:0}
+.fn-alert{margin-top:14px;padding:10px 12px;background:rgba(248,81,73,.08);border:1px solid rgba(248,81,73,.2);border-radius:6px;font-size:12px;color:#f85149;line-height:1.5}
+.fn-note{font-size:10px;color:#6e7681;margin-top:6px;font-style:italic}
+
+/* ── Creative table ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8b949e;border-bottom:1px solid #30363d;white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid #1c2128;color:#e6edf3;vertical-align:middle}
+tr:hover td{background:#1c2128}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+.pill-r{background:rgba(248,81,73,.15);color:#f85149}
+.pill-y{background:rgba(210,153,34,.15);color:#d29922}
+.pill-g{background:rgba(63,185,80,.15);color:#3fb950}
+.pill-b{background:rgba(88,166,255,.15);color:#58a6ff}
+.pill-grey{background:#21262d;color:#8b949e}
+.tbl-head-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px}
+.tbl-title{font-size:13px;font-weight:600;color:#e6edf3}
+.tbl-sub{font-size:11px;color:#6e7681}
+.creative-name{font-weight:600;color:#e6edf3}
+.creative-note{font-size:11px;color:#6e7681;margin-top:2px}
+
+/* ── Looker guide ── */
+.guide-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:20px 24px}
+.guide-top{font-size:14px;font-weight:600;color:#58a6ff;margin-bottom:4px}
+.guide-top-sub{font-size:12px;color:#8b949e;margin-bottom:22px}
+.steps{list-style:none}
+.step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid #21262d}
+.step:last-child{border-bottom:none;padding-bottom:0}
+.step-num{width:28px;height:28px;background:#21262d;border:1px solid #30363d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#58a6ff;flex-shrink:0;margin-top:1px}
+.step h4{font-size:13px;font-weight:600;color:#e6edf3;margin-bottom:4px}
+.step p{font-size:12px;color:#8b949e;line-height:1.6}
+code{background:#21262d;padding:1px 5px;border-radius:3px;font-family:monospace;font-size:11px;color:#79c0ff}
+.col2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.insight-box{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px 18px}
+.ib-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#8b949e;margin-bottom:10px}
+.ib-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1c2128;font-size:12px}
+.ib-item:last-child{border-bottom:none}
+.ib-k{color:#8b949e}.ib-v{font-weight:600}
+.ib-v.r{color:#f85149}.ib-v.y{color:#d29922}.ib-v.g{color:#3fb950}
+
+@media(max-width:960px){
+  .sc-grid{grid-template-columns:1fr 1fr}
+  .chart-grid,.funnel-grid,.col2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ── HEADER ── -->
+<header>
+  <div>
+    <h1>📚 BookWise Growth Dashboard</h1>
+    <div class="h-sub">
+      PMF &amp; Funnel Signal Tracker
+      <span class="badge">US · Android</span>
+      <span class="badge">R2 – R7 + Concept Test</span>
+      <span class="badge badge-live">● R7 Concept Active</span>
+    </div>
+  </div>
+  <div class="h-meta">
+    <strong>Last updated: Mar 24, 2026</strong>
+    Decision focus: Onboarding · Retention · Time Spent · Churn
+  </div>
+</header>
+
+<!-- ── PMF SCORECARDS ── -->
+<section>
+  <div class="sec-title">PMF Signal — Priority 1–4 Metrics (R7 Latest Round)</div>
+  <div class="sc-grid">
+
+    <div class="sc red">
+      <div class="sc-lbl">① Onboarding Completion</div>
+      <div class="sc-val">6%</div>
+      <div class="sc-bench">Benchmark: &gt;60%</div>
+      <div class="sc-status">🔴 CRITICAL</div>
+      <div class="sc-note">% users completing first summary on D0 · R7 main</div>
+    </div>
+
+    <div class="sc red">
+      <div class="sc-lbl">② Early Retention — D1</div>
+      <div class="sc-val">8%</div>
+      <div class="sc-bench">Benchmark: &gt;35% (Book Summary category)</div>
+      <div class="sc-status">🔴 CRITICAL</div>
+      <div class="sc-note">Users active on day 1 after install · R7 main</div>
+    </div>
+
+    <div class="sc yellow">
+      <div class="sc-lbl">③ Time Spent D0 (TSPU)</div>
+      <div class="sc-val">2m 42s</div>
+      <div class="sc-bench">Peak: 5m 18s (R2) · Latest concept: 52s</div>
+      <div class="sc-status">⚠️ DECLINING</div>
+      <div class="sc-note">Avg in-app time on install day · R7 main</div>
+    </div>
+
+    <div class="sc red">
+      <div class="sc-lbl">④ Churn Signal — D7 Retention</div>
+      <div class="sc-val">1%</div>
+      <div class="sc-bench">Benchmark: &gt;20% (Book Summary category)</div>
+      <div class="sc-status">🔴 CRITICAL</div>
+      <div class="sc-note">Users still active 7 days after install · R7 main</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── UA EFFICIENCY SNAPSHOT ── -->
+<section>
+  <div class="sec-title">UA Efficiency — Round-Over-Round Summary</div>
+  <div class="col2">
+    <div class="insight-box">
+      <div class="ib-title">Latest Round (R7 Main · Feb 14–20)</div>
+      <div class="ib-item"><span class="ib-k">Total Spend</span><span class="ib-v">$694</span></div>
+      <div class="ib-item"><span class="ib-k">Installs</span><span class="ib-v">249</span></div>
+      <div class="ib-item"><span class="ib-k">CPI</span><span class="ib-v g">$2.80</span></div>
+      <div class="ib-item"><span class="ib-k">CTR</span><span class="ib-v">2%</span></div>
+      <div class="ib-item"><span class="ib-k">Store CVR (Click→Install)</span><span class="ib-v y">16%</span></div>
+      <div class="ib-item"><span class="ib-k">Impressions</span><span class="ib-v">67,622</span></div>
+    </div>
+    <div class="insight-box">
+      <div class="ib-title">Concept Test (Mar 13–23 · Active)</div>
+      <div class="ib-item"><span class="ib-k">Total Spend</span><span class="ib-v">$505</span></div>
+      <div class="ib-item"><span class="ib-k">Installs</span><span class="ib-v">155</span></div>
+      <div class="ib-item"><span class="ib-k">CPI</span><span class="ib-v y">$3.30</span></div>
+      <div class="ib-item"><span class="ib-k">CTR</span><span class="ib-v">3%</span></div>
+      <div class="ib-item"><span class="ib-k">Store CVR (Click→Install)</span><span class="ib-v r">15%</span></div>
+      <div class="ib-item"><span class="ib-k">Best CPI Creative</span><span class="ib-v g">Sex Skill 2 · $2.90</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── LEADERSHIP READ-OUT ── -->
+<section>
+  <div class="sec-title">Leadership Signal Read-out</div>
+  <div class="readout">
+    <div class="ro-title">⚡ What the data says — 4 signals for your decision</div>
+    <div class="ro-row">
+      <div class="dot red"></div>
+      <div class="ro-text">
+        <strong>The product is not delivering its core value moment at scale.</strong>
+        Only 4–6% of users who install complete a book summary on Day 0. The main bottleneck is between "Opens Content" (13–31%) and "Completes Summary" — meaning users start but abandon before finishing. Fixing this single drop-off unlocks everything downstream.
+      </div>
+    </div>
+    <div class="ro-row">
+      <div class="dot red"></div>
+      <div class="ro-text">
+        <strong>Retention is critically below category benchmarks and declining.</strong>
+        D1 retention of 5–10% is 4–7× below the 35% benchmark for Book Summary apps. D7 retention at 0–5% means there is virtually no habit formation. The latest concept test shows D7 = 0% — the trend is moving in the wrong direction.
+      </div>
+    </div>
+    <div class="ro-row">
+      <div class="dot yellow"></div>
+      <div class="ro-text">
+        <strong>A creative-quality tension is attracting wrong-fit users at scale.</strong>
+        "Sex Skill" creative delivers the lowest CPI ($1.5) but the worst D1 retention (3%). "Image-04" delivers the best D1 (19%) but costs $5.00/install with only 32 installs tested. Until a creative combines low CPI AND high retention, UA spend is building a leaky bucket.
+      </div>
+    </div>
+    <div class="ro-row">
+      <div class="dot yellow"></div>
+      <div class="ro-text">
+        <strong>Recommended next action:</strong>
+        <strong>Do not scale UA budget.</strong> Invest next sprint in fixing first-session onboarding (target: get Complete First Summary rate from 6% → 30%+). Run a dedicated product test on content discoverability and summary length. Only return to UA scaling once D1 retention exceeds 20% consistently across 2 rounds.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TREND CHARTS ROW 1 ── -->
+<section>
+  <div class="sec-title">Round-Over-Round Trends</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="ct-title">D1 / D3 / D7 Retention by Round</div>
+      <div class="ct-sub">All values below Book Summary benchmark (D1 &gt;35%, D7 &gt;20%). Benchmark shown as green dashed line.</div>
+      <div class="ct-wrap"><canvas id="retChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="ct-title">CPI (Cost per Install) by Round</div>
+      <div class="ct-sub">Lower = better · Best: $2.66 (R2, small sample) · R7 main at $2.80 is a positive signal</div>
+      <div class="ct-wrap"><canvas id="cpiChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TREND CHARTS ROW 2 ── -->
+<section>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="ct-title">Time Spent Day 0 (TSPU) — Minutes</div>
+      <div class="ct-sub">Declining trend from 5.3m (R2) → 0.87m (Concept). Recovering in R7 main at 2.7m.</div>
+      <div class="ct-wrap"><canvas id="tspuChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="ct-title">Installs Volume &amp; Total Spend by Round</div>
+      <div class="ct-sub">R5–R6 peak spend ($900–$1,095) did not improve retention. R7 is more efficient.</div>
+      <div class="ct-wrap"><canvas id="volChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ONBOARDING FUNNEL ── -->
+<section>
+  <div class="sec-title">Onboarding Funnel Drop-off — R6 vs R7 (Only Rounds with Funnel Data)</div>
+  <div class="funnel-grid">
+
+    <!-- R6 -->
+    <div class="funnel-card">
+      <div class="fn-title">Round 6 — Jan 22–26, 2026</div>
+      <div class="fn-sub">230 installs · $1,095 spend · $4.80 CPI</div>
+
+      <div class="fn-row">
+        <div class="fn-lbl">Install</div>
+        <div class="fn-bar-bg">
+          <div class="fn-bar" style="width:100%;background:rgba(88,166,255,.25);color:#58a6ff">100%</div>
+        </div>
+        <div class="fn-pct" style="color:#58a6ff">230</div>
+        <div class="fn-drop"></div>
+      </div>
+
+      <div class="fn-row">
+        <div class="fn-lbl" style="font-size:10px;color:#6e7681">Welcome / Book Select*</div>
+        <div class="fn-bar-bg">
+          <div class="fn-bar" style="width:100%;background:rgba(139,148,158,.15);color:#6e7681;font-size:10px">138–197%*</div>
+        </div>
+        <div class="fn-pct" style="color:#6e7681;font-size:11px">317–454</div>
+        <div class="fn-drop" style="color:#6e7681;font-size:10px">+returns</div>
+      </div>
+
+      <div class="fn-row">
+        <div class="fn-lbl">Plays Content (5s)</div>
+        <div class="fn-bar-bg">
+          <div class="fn-bar" style="width:31%;background:rgba(210,153,34,.25);color:#d29922">31%</div>
+        </div>
+        <div class="fn-pct" style="color:#d29922">71</div>
+        <div class="fn-drop">▼ 69%</div>
+      </div>
+
+      <div class="fn-row">
+        <div class="fn-lbl">Completes Summary</div>
+        <div class="fn-bar-bg">
+          <div class="fn-bar" style="width:3.9%;background:rgba(248,81,73,.25);color:#f85149">3.9%</div>
+        </div>
+        <div class="fn-pct" style="color:#f85149">9</div>
+        <div class="fn-drop">▼ 96%</div>
+      </div>
+
+      <div class="fn-alert">⚠️ 96.1% of installs never experience the core value. Largest bottleneck: "Plays 5s → Completes" — only 13% of starters finish (9/71).</div>
+      <div class="fn-note">*Welcome &amp; Book Select exceed 100% because they include returning users — not a pure D0 funnel.</div>
+    </div>
+
+    <!-- R7 -->
+    <div class="funnel-card">
+      <div class="fn-title">Round 7 Main — Feb 14–20, 2026</div>
+      <div class="fn-sub">249 installs · $694 spend · $2.80 CPI</div>
+
+      <div class="fn-row">
+        <div class="fn-lbl">Install</div>
+        <div class="fn-bar-bg">
+          <div class="fn-bar" style="width:100%;background:rgba(88,166,255,.25);color:#58a6ff">100%</div>
+        </div>
+        <div class="fn-pct" style="color:#58a6ff">249</div>
+        <div class="fn-drop"></div>
+      </div>
+
+      <div class="fn-row">
+        <div class="fn-lbl" style="font-size:10px;color:#6e7681">Welcome / Book Select*</div>
+        <div class="fn-bar-bg">
+          <div class="fn-bar" style="width:100%;background:rgba(139,148,158,.15);color:#6e7681;font-size:10px">132–194%*</div>
+        </div>
+        <div class="fn-pct" style="color:#6e7681;font-size:11px">328–482</div>
+        <div class="fn-drop" style="color:#6e7681;font-size:10px">+returns</div>
+      </div>
+
+      <div class="fn-row">
+        <div class="fn-lbl">Plays Content (5s)</div>
+        <div class="fn-bar-bg">
+          <div class="fn-bar" style="width:13%;background:rgba(248,81,73,.2);color:#f85149">13%</div>
+        </div>
+        <div class="fn-pct" style="color:#f85149">33</div>
+        <div class="fn-drop">▼ 87%</div>
+      </div>
+
+      <div class="fn-row">
+        <div class="fn-lbl">Completes Summary</div>
+        <div class="fn-bar-bg">
+          <div class="fn-bar" style="width:6.4%;background:rgba(248,81,73,.2);color:#f85149">6.4%</div>
+        </div>
+        <div class="fn-pct" style="color:#f85149">16</div>
+        <div class="fn-drop">▼ 94%</div>
+      </div>
+
+      <div class="fn-alert">⚠️ 93.6% of installs never complete a summary. Play 5s rate dropped sharply: R6 was 31%, R7 dropped to 13% — the top-of-funnel engagement deteriorated significantly.</div>
+      <div class="fn-note">*Welcome &amp; Book Select exceed 100% because they include returning users — not a pure D0 funnel.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── CREATIVE PERFORMANCE ── -->
+<section>
+  <div class="sec-title">Creative Performance — Quality vs. Volume Analysis</div>
+
+  <!-- R7 Main -->
+  <div class="insight-box" style="margin-bottom:14px">
+    <div class="tbl-head-row">
+      <div>
+        <div class="tbl-title">R7 Main (Feb 14–20) — The Volume vs. Quality Tension</div>
+        <div class="tbl-sub">$694 total · 249 installs · No creative achieves low CPI + high retention simultaneously</div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Creative</th><th>Spend</th><th>Installs</th><th>CPI</th>
+            <th>D1 Ret.</th><th>D3 Ret.</th><th>D7 Ret.</th><th>TSPU D0</th><th>Signal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="creative-name">Sex Skill</div>
+              <div class="creative-note">Highest volume creative</div>
+            </td>
+            <td>$193</td><td>131</td>
+            <td><span class="pill pill-g">$1.50</span></td>
+            <td><span class="pill pill-r">3%</span></td>
+            <td><span class="pill pill-r">1%</span></td>
+            <td><span class="pill pill-r">2%</span></td>
+            <td>3m 05s</td>
+            <td><span class="pill pill-y">Cheap · wrong-fit</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="creative-name">Image-02</div>
+              <div class="creative-note">Best overall balance</div>
+            </td>
+            <td>$340</td><td>86</td>
+            <td><span class="pill pill-y">$4.00</span></td>
+            <td><span class="pill pill-y">13%</span></td>
+            <td><span class="pill pill-r">5%</span></td>
+            <td><span class="pill pill-r">0%</span></td>
+            <td>2m 50s</td>
+            <td><span class="pill pill-b">Best balance</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="creative-name">Image-04</div>
+              <div class="creative-note">Best D1 — needs scale</div>
+            </td>
+            <td>$159</td><td>32</td>
+            <td><span class="pill pill-r">$5.00</span></td>
+            <td><span class="pill pill-y">19%</span></td>
+            <td><span class="pill pill-r">0%</span></td>
+            <td><span class="pill pill-r">0%</span></td>
+            <td>49s</td>
+            <td><span class="pill pill-b">Best D1 · unscaled</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Concept Test -->
+  <div class="insight-box" style="margin-bottom:14px">
+    <div class="tbl-head-row">
+      <div>
+        <div class="tbl-title">R7 Concept Test (Mar 13–23) — Testing New Concepts</div>
+        <div class="tbl-sub">$505 total · 155 installs · "Big Impact" shows best D3 signal (11%) in concept round</div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Creative</th><th>Spend</th><th>Installs</th><th>CPI</th>
+            <th>D1 Ret.</th><th>D3 Ret.</th><th>D7 Ret.</th><th>Signal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="creative-name">Sex Skill 2</div></td>
+            <td>$268</td><td>94</td>
+            <td><span class="pill pill-g">$2.90</span></td>
+            <td><span class="pill pill-r">5%</span></td>
+            <td><span class="pill pill-r">2%</span></td>
+            <td><span class="pill pill-r">0%</span></td>
+            <td><span class="pill pill-y">High vol, low ret.</span></td>
+          </tr>
+          <tr>
+            <td><div class="creative-name">Listening</div></td>
+            <td>$109</td><td>32</td>
+            <td><span class="pill pill-y">$3.40</span></td>
+            <td><span class="pill pill-r">0%</span></td>
+            <td><span class="pill pill-r">0%</span></td>
+            <td><span class="pill pill-grey">—</span></td>
+            <td><span class="pill pill-r">No signal</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="creative-name">Big Impact</div>
+              <div class="creative-note">⭐ Best D3 in concept round</div>
+            </td>
+            <td>$92</td><td>21</td>
+            <td><span class="pill pill-r">$4.40</span></td>
+            <td><span class="pill pill-r">5%</span></td>
+            <td><span class="pill pill-y">11%</span></td>
+            <td><span class="pill pill-grey">—</span></td>
+            <td><span class="pill pill-b">Best D3 concept</span></td>
+          </tr>
+          <tr>
+            <td><div class="creative-name">Sex Skill 3</div></td>
+            <td>$36</td><td>8</td>
+            <td><span class="pill pill-r">$4.50</span></td>
+            <td><span class="pill pill-r">0%</span></td>
+            <td><span class="pill pill-r">0%</span></td>
+            <td><span class="pill pill-grey">—</span></td>
+            <td><span class="pill pill-r">No signal</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- R6 notable creatives -->
+  <div class="insight-box">
+    <div class="tbl-head-row">
+      <div>
+        <div class="tbl-title">R6 Creatives (Jan 22–26) — Historical Reference</div>
+        <div class="tbl-sub">$1,095 total · 230 installs · Image-02 and VD-7minsprep have strongest D3 signals</div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Creative</th><th>Spend</th><th>Installs</th><th>CPI</th>
+            <th>D1 Ret.</th><th>D3 Ret.</th><th>TSPU D0</th><th>Signal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="creative-name">Image-02</div></td>
+            <td>$573</td><td>131</td>
+            <td><span class="pill pill-r">$4.40</span></td>
+            <td><span class="pill pill-y">13%</span></td>
+            <td><span class="pill pill-y">10%</span></td>
+            <td>1m 44s</td>
+            <td><span class="pill pill-b">Consistent performer</span></td>
+          </tr>
+          <tr>
+            <td><div class="creative-name">Image-04</div></td>
+            <td>$270</td><td>61</td>
+            <td><span class="pill pill-r">$4.40</span></td>
+            <td><span class="pill pill-r">7%</span></td>
+            <td><span class="pill pill-r">5%</span></td>
+            <td>3m 13s</td>
+            <td><span class="pill pill-grey">Moderate</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="creative-name">VD-7minsprep</div>
+              <div class="creative-note">⭐ Highest TSPU ever recorded</div>
+            </td>
+            <td>$27</td><td>6</td>
+            <td><span class="pill pill-r">$4.50</span></td>
+            <td><span class="pill pill-y">17%</span></td>
+            <td><span class="pill pill-g">100%</span></td>
+            <td>5m 21s</td>
+            <td><span class="pill pill-b">Best D3 ever · tiny sample</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ── LOOKER STUDIO GUIDE ── -->
+<section>
+  <div class="sec-title">Looker Studio Setup — Beginner Step-by-Step</div>
+  <div class="guide-card">
+    <div class="guide-top">Goal: Recreate this dashboard in Looker Studio for live team sharing</div>
+    <div class="guide-top-sub">
+      Three CSV files are included in your folder: <code>BookWise_Rounds_Data.csv</code> (trends), <code>BookWise_Funnel_Data.csv</code> (funnel), <code>BookWise_Creatives_Data.csv</code> (creatives).
+      Upload all three to Google Sheets first, then follow these steps.
+    </div>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-num">1</div>
+        <div>
+          <h4>Upload CSVs to Google Sheets</h4>
+          <p>Open Google Sheets → <strong>File → Import → Upload</strong>. Upload <code>BookWise_Rounds_Data.csv</code> first.
+          Name the tab <code>Rounds</code>. Repeat for Funnel (tab: <code>Funnel</code>) and Creatives (tab: <code>Creatives</code>) — either as separate sheets in the same file or three different files. Keep the URL handy.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-num">2</div>
+        <div>
+          <h4>Create a Looker Studio Report</h4>
+          <p>Go to <code>lookerstudio.google.com</code> → Click <strong>Create → Report</strong>.
+          Click <strong>Add data → Google Sheets</strong> → select your BookWise sheet → choose the <code>Rounds</code> tab → <strong>Add</strong>.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-num">3</div>
+        <div>
+          <h4>Build the PMF Scorecard Row (4 scorecards)</h4>
+          <p>Insert → <strong>Scorecard</strong> (repeat 4×).<br>
+          Card 1: Metric = <code>complete_rate_pct</code> · Label = "Onboarding Completion %"<br>
+          Card 2: Metric = <code>d1_retention_pct</code> · Label = "D1 Retention %"<br>
+          Card 3: Metric = <code>tspu_mins</code> · Label = "Avg Time Spent D0 (min)"<br>
+          Card 4: Metric = <code>d7_retention_pct</code> · Label = "D7 Retention %"</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-num">4</div>
+        <div>
+          <h4>Add Retention Trend Chart</h4>
+          <p>Insert → <strong>Line chart</strong>. Dimension = <code>round</code>. Add 3 metrics:
+          <code>d1_retention_pct</code>, <code>d3_retention_pct</code>, <code>d7_retention_pct</code>.
+          Style → Reference lines → Add constant line at <strong>35</strong> (D1 benchmark, color: green, dashed).</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-num">5</div>
+        <div>
+          <h4>Add CPI &amp; TSPU Trend Charts</h4>
+          <p>Insert → <strong>Bar chart</strong>. Dimension = <code>round</code>. Metric = <code>cpi_usd</code>.
+          Duplicate it for TSPU: change metric to <code>tspu_mins</code>.
+          Tip: in Style → Bar color → set conditional color rules (high CPI = red, low = green).</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-num">6</div>
+        <div>
+          <h4>Add Funnel Chart (new data source)</h4>
+          <p>Click Resource → <strong>Add a data source → Google Sheets → Funnel tab</strong>.
+          Insert → <strong>Bar chart</strong>. Dimension = <code>stage</code>. Metric = <code>pct_of_installs</code>.
+          Filter control: add a <strong>Filter</strong> on <code>round</code> so leadership can toggle R6 vs. R7.
+          Sort: <code>stage_order</code> ascending.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-num">7</div>
+        <div>
+          <h4>Add Creative Performance Table</h4>
+          <p>Add Creatives as a third data source (same method as step 6).
+          Insert → <strong>Table</strong>. Columns: <code>creative, spend_usd, installs, cpi_usd, d1_pct, d3_pct, notes</code>.
+          Style → enable <strong>Data bars</strong> for <code>cpi_usd</code> and <code>d1_pct</code> columns.
+          Sort default: <code>d1_pct</code> descending.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-num">8</div>
+        <div>
+          <h4>Add Round Filter Control</h4>
+          <p>Insert → <strong>Filter control</strong> → set field = <code>round</code>.
+          This lets leadership click between rounds on any chart. Place it top-right of the report.
+          Also add a <strong>Date range control</strong> connected to the <code>start_date</code> field.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-num">9</div>
+        <div>
+          <h4>Share with Leadership</h4>
+          <p>Top right → <strong>Share → Manage access → Anyone with link → Viewer</strong>.
+          Copy link and paste into Slack/email. Anyone can view without a Google account.
+          To update: just paste new round data rows into the Google Sheet — Looker auto-refreshes within minutes.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<!-- ── CHARTS ── -->
+<script>
+Chart.defaults.color = '#6e7681';
+Chart.defaults.borderColor = '#21262d';
+
+const rounds = ['R2','R3','R5','R6','R7','Concept'];
+
+// ① Retention Chart
+new Chart(document.getElementById('retChart'), {
+  type: 'line',
+  data: {
+    labels: rounds,
+    datasets: [
+      {
+        label: 'D1 Retention %',
+        data: [null, 5, 9, 10, 8, 5],
+        borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,.1)',
+        fill: true, tension: .4, pointRadius: 5, pointBackgroundColor: '#58a6ff', borderWidth: 2
+      },
+      {
+        label: 'D3 Retention %',
+        data: [null, 6, 5, 7, 2, 4],
+        borderColor: '#bc8cff', backgroundColor: 'transparent',
+        tension: .4, borderDash: [4,4], pointRadius: 4, pointBackgroundColor: '#bc8cff', borderWidth: 1.5
+      },
+      {
+        label: 'D7 Retention %',
+        data: [null, 4, 5, null, 1, 0],
+        borderColor: '#f85149', backgroundColor: 'transparent',
+        tension: .4, borderDash: [2,3], pointRadius: 4, pointBackgroundColor: '#f85149', borderWidth: 1.5
+      },
+      {
+        label: 'D1 Benchmark (35%)',
+        data: [35,35,35,35,35,35],
+        borderColor: 'rgba(63,185,80,.4)', backgroundColor: 'transparent',
+        borderDash: [8,4], pointRadius: 0, borderWidth: 1.5
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y ?? 'N/A'}%` } }
+    },
+    scales: {
+      y: {
+        beginAtZero: true, max: 40,
+        ticks: { callback: v => v+'%', font: { size: 10 } },
+        grid: { color: '#1c2128' }
+      },
+      x: { ticks: { font: { size: 10 } }, grid: { color: '#1c2128' } }
+    }
+  }
+});
+
+// ② CPI Chart
+new Chart(document.getElementById('cpiChart'), {
+  type: 'bar',
+  data: {
+    labels: rounds,
+    datasets: [{
+      label: 'CPI ($)',
+      data: [2.66, 3.43, 3.93, 4.80, 2.80, 3.30],
+      backgroundColor: ['#3fb950','#d29922','#f85149','#f85149','#3fb950','#d29922'],
+      borderRadius: 5, borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` CPI: $${ctx.parsed.y}` } }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { callback: v => '$'+v, font: { size: 10 } },
+        grid: { color: '#1c2128' }
+      },
+      x: { ticks: { font: { size: 10 } }, grid: { color: '#1c2128' } }
+    }
+  }
+});
+
+// ③ TSPU Chart
+const tspuVals = [5.3, 3.37, 1.65, 2.25, 2.70, 0.87];
+new Chart(document.getElementById('tspuChart'), {
+  type: 'line',
+  data: {
+    labels: rounds,
+    datasets: [{
+      label: 'TSPU D0 (min)',
+      data: tspuVals,
+      borderColor: '#d29922', backgroundColor: 'rgba(210,153,34,.1)',
+      fill: true, tension: .4, borderWidth: 2,
+      pointRadius: 5,
+      pointBackgroundColor: tspuVals.map(v => v >= 3 ? '#3fb950' : v >= 2 ? '#d29922' : '#f85149'),
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} min avg on install day` } }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { callback: v => v+'m', font: { size: 10 } },
+        grid: { color: '#1c2128' }
+      },
+      x: { ticks: { font: { size: 10 } }, grid: { color: '#1c2128' } }
+    }
+  }
+});
+
+// ④ Volume Chart
+new Chart(document.getElementById('volChart'), {
+  type: 'bar',
+  data: {
+    labels: rounds,
+    datasets: [
+      {
+        label: 'Installs',
+        data: [10, 81, 229, 230, 249, 155],
+        backgroundColor: 'rgba(88,166,255,.65)',
+        borderRadius: 4, borderSkipped: false,
+        yAxisID: 'y'
+      },
+      {
+        label: 'Spend ($)',
+        data: [27, 278, 900, 1095, 694, 505],
+        type: 'line',
+        borderColor: '#bc8cff', backgroundColor: 'transparent',
+        tension: .4, pointRadius: 4, pointBackgroundColor: '#bc8cff', borderWidth: 2,
+        yAxisID: 'y1'
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { font: { size: 10 } },
+        grid: { color: '#1c2128' },
+        title: { display: true, text: 'Installs', font: { size: 10 }, color: '#58a6ff' }
+      },
+      y1: {
+        beginAtZero: true, position: 'right',
+        ticks: { callback: v => '$'+v, font: { size: 10 } },
+        grid: { display: false },
+        title: { display: true, text: 'Spend ($)', font: { size: 10 }, color: '#bc8cff' }
+      },
+      x: { ticks: { font: { size: 10 } }, grid: { color: '#1c2128' } }
+    }
+  }
+});
+</script>
+</body>
+</html>
