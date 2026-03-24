@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BookWise · Growth Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+/* ── Reset & Variables ─────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#F5F7FA;--surface:#FFFFFF;--surface2:#F8F9FA;
+  --border:#EEEEEE;--border2:#E0E0E0;
+  --text:#1A1A1A;--muted:#555;--faint:#999;
+  /* Brand — ONLY for sidebar, labels, buttons */
+  --orange:#FF6B00;--orange-bg:rgba(255,107,0,.08);
+  /* Semantic status */
+  --good:#22c55e;--warn:#f59e0b;--bad:#ef4444;
+  --good-bg:rgba(34,197,94,.08);--warn-bg:rgba(245,158,11,.08);--bad-bg:rgba(239,68,68,.06);
+  /* Data palette (neutral) */
+  --blue:#3b82f6;--purple:#8b5cf6;--teal:#14b8a6;--slate:#94a3b8;
+  --sidebar-bg:#1A1A1A;
+  --r:8px;--gap:14px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 0 0 1px var(--border);
+}
+html{height:100%}
+body{display:flex;min-height:100vh;background:var(--bg);font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.5;color:var(--text)}
+
+/* ── SIDEBAR ───────────────────────────────── */
+.sidebar{width:220px;min-width:220px;background:var(--sidebar-bg);position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;flex-shrink:0}
+.sb-logo{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:6px}
+.sb-logo-title{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.sb-logo-sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:3px}
+.sb-section{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.25);padding:14px 20px 5px}
+.sb-link{display:flex;align-items:center;gap:10px;padding:9px 20px 9px 17px;font-size:13px;font-weight:500;color:rgba(255,255,255,.5);text-decoration:none;cursor:pointer;transition:.15s;border-left:3px solid transparent}
+.sb-link:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.05)}
+.sb-link.active{color:#fff;background:rgba(255,107,0,.14);border-left-color:var(--orange)}
+.sb-icon{font-size:14px;width:18px;text-align:center}
+.sb-footer{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.3);line-height:1.8}
+.sb-footer strong{color:rgba(255,255,255,.5)}
+
+/* ── MAIN ──────────────────────────────────── */
+.main{flex:1;overflow:hidden}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 28px 80px}
+section{margin-bottom:34px}
+
+/* ── ZONE LABELS ───────────────────────────── */
+.zone-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--orange);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.zone-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.card-sub{font-size:11px;color:var(--faint);margin-bottom:14px}
+
+/* ── GRIDS ─────────────────────────────────── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+
+/* ── HEADER ────────────────────────────────── */
+header{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:20px 24px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:flex-start;border-left:4px solid var(--orange)}
+.hdr-left h1{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.4px}
+.hdr-sub{color:var(--muted);font-size:12px;margin-top:5px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:#F2F2F2;color:var(--muted);border:1px solid var(--border)}
+.tag.live{background:var(--good-bg);color:var(--good);border-color:rgba(34,197,94,.25)}
+.hdr-right{text-align:right;font-size:11px;color:var(--faint);line-height:1.8}
+
+/* ── KPI HERO GRID ─────────────────────────── */
+.kpi-hero-grid{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:152px 152px;gap:var(--gap)}
+.kpi-hero-item{grid-row:1/3}
+.kpi-hero-item .flip-wrap{height:318px}
+.kpi-small-item .flip-wrap{height:152px}
+.kpi-wide-item{grid-column:2/4}
+.kpi-wide-item .flip-wrap{height:152px}
+
+.flip-wrap{perspective:1000px;cursor:pointer}
+.flip-wrap:hover .flipper{transform:rotateY(180deg)}
+.flipper{width:100%;height:100%;transform-style:preserve-3d;transition:transform .45s ease;position:relative}
+.flip-front,.flip-back{position:absolute;width:100%;height:100%;backface-visibility:hidden;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px;overflow:hidden}
+.flip-back{transform:rotateY(180deg);display:flex;flex-direction:column;justify-content:center;gap:10px;background:var(--surface2)}
+.ns-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--orange);background:var(--orange-bg);padding:2px 8px;border-radius:10px;margin-bottom:6px}
+.kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:4px}
+.kpi-val{font-size:36px;font-weight:800;line-height:1;color:var(--text);margin-bottom:4px}
+.kpi-val-hero{font-size:54px}
+.kpi-bench{font-size:11px;color:var(--faint)}
+.kpi-status{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;margin-top:6px}
+.stat-r{background:var(--bad-bg);color:var(--bad)}
+.stat-y{background:var(--warn-bg);color:var(--warn)}
+.stat-g{background:var(--good-bg);color:var(--good)}
+.kpi-sparkline{margin-top:10px}
+.kpi-sparkline svg{width:100%;display:block}
+.back-lbl{font-size:11px;font-weight:700;color:var(--blue)}
+.back-desc{font-size:12px;color:var(--muted);line-height:1.55}
+.back-act{font-size:11px;font-weight:600;color:var(--text)}
+.hint{position:absolute;bottom:10px;right:12px;font-size:9px;color:var(--faint);font-style:italic}
+
+/* ── GUARDRAILS ────────────────────────────── */
+.guardrail-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.gr-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px}
+.gr-val{font-size:16px;font-weight:800;color:var(--text)}
+.gr-lbl{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+
+/* ── CHART CARDS ───────────────────────────── */
+.chart-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:20px 22px}
+.chart-wrap{position:relative;height:200px}
+
+/* ── FUNNEL ────────────────────────────────── */
+.fn-rows{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.fn-row{display:flex;align-items:center;gap:10px}
+.fn-lbl{width:155px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0}
+.fn-bg{flex:1;background:#F0F0F0;border-radius:5px;height:28px;overflow:hidden}
+.fn-bar{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:10px;font-size:11px;font-weight:700;min-width:32px;color:#fff}
+.fn-n{width:36px;text-align:right;font-size:11px;font-weight:700;flex-shrink:0}
+.fn-drop{width:52px;text-align:right;font-size:10px;color:var(--bad);flex-shrink:0;font-weight:600}
+.tab-row{display:flex;gap:8px;margin-bottom:14px}
+.tab{padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--muted);background:#F5F5F5;transition:.15s}
+.tab:hover{border-color:var(--orange);color:var(--orange)}
+.tab.active{background:var(--orange);border-color:var(--orange);color:#fff}
+
+/* ── DROP-OFF CARDS ────────────────────────── */
+.dropoff-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.do-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px;text-align:center}
+.do-from{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
+.do-val{font-size:28px;font-weight:800;margin:4px 0;line-height:1}
+.do-label{font-size:11px;color:var(--muted)}
+
+/* ── INSIGHT BOXES ─────────────────────────── */
+.insight{margin-top:14px;padding:12px 14px;border-radius:var(--r);font-size:12px;line-height:1.65}
+.insight strong{font-weight:700}
+.insight.amber{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-left:3px solid var(--warn);color:#92400e}
+.insight.red{background:var(--bad-bg);border:1px solid rgba(239,68,68,.18);border-left:3px solid var(--bad);color:#991b1b}
+.insight.blue{background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.18);border-left:3px solid var(--blue);color:#1e40af}
+.insight.purple{background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.18);border-left:3px solid var(--purple);color:#5b21b6}
+
+/* ── DATA TABLES ───────────────────────────── */
+.tbl-wrap{overflow-x:auto;margin-top:8px}
+.data-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.data-tbl th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);padding:8px 10px;border-bottom:2px solid var(--border);white-space:nowrap}
+.data-tbl td{padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+.data-tbl tr:hover{background:var(--surface2)}
+.data-tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.cg{color:var(--good);font-weight:700}.cy{color:var(--warn);font-weight:700}.cr{color:var(--bad);font-weight:700}.cna{color:var(--faint)}
+
+/* ── HYPOTHESIS BOARD ──────────────────────── */
+.hyp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hyp-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.hyp-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.hyp-card.expanded .hyp-detail{display:block}
+.hyp-head{display:flex;align-items:flex-start;gap:10px;padding:14px 16px}
+.hyp-bar{width:4px;border-radius:2px;flex-shrink:0;margin-top:2px}
+.hyp-body{flex:1;min-width:0}
+.hyp-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.hyp-signal{font-size:11px;color:var(--muted);line-height:1.4}
+.hyp-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;white-space:nowrap;flex-shrink:0}
+.b-val{background:var(--good-bg);color:var(--good)}.b-act{background:var(--warn-bg);color:var(--warn)}.b-crit{background:var(--bad-bg);color:var(--bad)}.b-open{background:rgba(59,130,246,.08);color:var(--blue)}
+.hyp-detail{display:none;padding:0 16px 14px;margin-left:14px;border-top:1px solid var(--border)}
+.hyp-detail p{font-size:12px;color:var(--muted);line-height:1.6;padding-top:10px}
+.hyp-detail .action{margin-top:8px;font-size:12px;font-weight:700;color:var(--orange)}
+/* Hypothesis enhancements */
+.hyp-root{font-size:10px;font-style:italic;color:var(--faint);margin-bottom:5px;line-height:1.4}
+.hyp-conf-wrap{margin-top:8px}
+.hyp-conf-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.hyp-conf-track{height:4px;background:#EBEBEB;border-radius:2px;overflow:hidden}
+.hyp-conf-fill{height:4px;border-radius:2px}
+.hyp-evidence{display:inline-block;font-size:10px;font-weight:700;color:var(--blue);background:rgba(59,130,246,.08);padding:1px 7px;border-radius:4px;margin:6px 0 4px}
+
+/* ── USER BEHAVIOR ZONE ─────────────────────── */
+.ub-segment-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.seg-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:16px 18px}
+.seg-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.seg-creative{font-size:11px;color:var(--faint);margin-bottom:10px}
+.seg-stat{display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid var(--border)}
+.seg-stat:last-child{border-bottom:none}
+.seg-stat-label{color:var(--muted)}.seg-stat-val{font-weight:700}
+.seg-fit{display:inline-block;margin-top:10px;font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px}
+.fit-wrong{background:var(--bad-bg);color:var(--bad)}.fit-right{background:var(--good-bg);color:var(--good)}.fit-mod{background:var(--warn-bg);color:var(--warn)}
+.data-badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:middle}
+.badge-actual{background:rgba(59,130,246,.1);color:var(--blue)}.badge-inferred{background:rgba(245,158,11,.1);color:var(--warn)}.badge-none{background:#F0F0F0;color:var(--faint)}
+.eng-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.eng-stat{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:16px 18px;text-align:center}
+.eng-val{font-size:28px;font-weight:800;line-height:1;margin:6px 0}.eng-label{font-size:11px;color:var(--muted)}.eng-note{font-size:10px;color:var(--faint);margin-top:4px;font-style:italic}
+
+/* ── SPRINT BACKLOG TABLE ────────────────────── */
+.sprint-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:18px}
+.sprint-tbl th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);padding:8px 10px;border-bottom:2px solid var(--border);white-space:nowrap}
+.sprint-tbl td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.sprint-tbl tr:hover{background:var(--surface2)}
+.p0{background:var(--bad-bg);color:var(--bad);font-weight:800;font-size:11px;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.p1{background:var(--warn-bg);color:var(--warn);font-weight:800;font-size:11px;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.p2{background:rgba(59,130,246,.08);color:var(--blue);font-weight:800;font-size:11px;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.impact-g{font-size:11px;font-weight:700;color:var(--good)}
+
+/* ── LEADERSHIP READOUT ────────────────────── */
+.readout{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:18px 22px}
+.ro-title{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:.07em}
+.scorecard{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:18px}
+.scorecard th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);padding:8px 10px;border-bottom:2px solid var(--border)}
+.scorecard td{padding:8px 10px;border-bottom:1px solid var(--border)}
+.scorecard .num{text-align:right;font-variant-numeric:tabular-nums}
+.conclusion-cards{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.conc{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--muted);line-height:1.6}
+.conc:last-child{border-bottom:none}
+.conc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:7px}
+.conc strong{color:var(--text)}
+.ro-footer{margin-top:14px;display:flex;gap:10px;align-items:center}
+.btn-primary{display:inline-flex;align-items:center;gap:6px;background:var(--orange);color:#fff;font-weight:700;font-size:12px;padding:8px 16px;border-radius:6px;cursor:pointer;border:none;font-family:inherit;transition:opacity .15s}
+.btn-primary:hover{opacity:.88}
+
+/* ── PRE-INSTALL / FUNNEL SECTION DIVIDERS ──── */
+.funnel-section-lbl{display:flex;align-items:center;gap:10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin:16px 0 8px}
+.funnel-section-lbl::before,.funnel-section-lbl::after{content:'';flex:1;height:1px;background:var(--border)}
+.funnel-section-lbl span{white-space:nowrap}
+
+/* ── HYPOTHESIS TREES ────────────────────────── */
+.tree-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tree-tab{padding:5px 13px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--muted);background:#F5F5F5;transition:.15s;white-space:nowrap}
+.tree-tab:hover{border-color:var(--orange);color:var(--orange)}
+.tree-tab.active{background:var(--orange);border-color:var(--orange);color:#fff}
+.tree-pane{display:none}.tree-pane.active{display:block}
+.tree-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:18px 22px}
+.tree-root{background:var(--text);color:#fff;border-radius:8px;padding:12px 16px;margin-bottom:10px;text-align:center}
+.tree-root-q{font-size:10px;color:rgba(255,255,255,.45);margin-bottom:3px;font-style:italic}
+.tree-root-title{font-size:13px;font-weight:700}
+.tree-root-val{font-size:26px;font-weight:800;margin-top:4px;line-height:1}
+.tree-root-sub{font-size:10px;color:rgba(255,255,255,.45);margin-top:2px}
+.tree-arrow{text-align:center;color:var(--faint);font-size:11px;margin:5px 0;letter-spacing:1px}
+.tree-level{display:grid;gap:8px;margin:2px 0}
+.tree-node{background:var(--surface2);border-radius:6px;padding:10px 12px;border-left:3px solid var(--border)}
+.tree-node.good{border-left-color:var(--good);background:rgba(34,197,94,.04)}
+.tree-node.warn{border-left-color:var(--warn);background:rgba(245,158,11,.04)}
+.tree-node.bad{border-left-color:var(--bad);background:rgba(239,68,68,.04)}
+.tree-node.open{border-left-color:var(--blue);background:rgba(59,130,246,.04)}
+.tree-node.neutral{border-left-color:var(--purple);background:rgba(139,92,246,.04)}
+.tn-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin-bottom:3px}
+.tn-val{font-size:22px;font-weight:800;line-height:1.1;color:var(--text)}
+.tn-sub{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+.tn-badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;margin-top:5px}
+.tn-badge.g{background:var(--good-bg);color:var(--good)}.tn-badge.y{background:var(--warn-bg);color:var(--warn)}.tn-badge.r{background:var(--bad-bg);color:var(--bad)}.tn-badge.b{background:rgba(59,130,246,.08);color:var(--blue)}
+.tree-action{background:var(--orange-bg);border:1px solid rgba(255,107,0,.18);border-radius:6px;padding:10px 14px;margin-top:10px;font-size:11px;font-weight:600;color:var(--orange)}
+
+/* ── RESPONSIVE ────────────────────────────── */
+@media(max-width:960px){
+  .sidebar{display:none}
+  .kpi-hero-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto}
+  .kpi-hero-item{grid-row:auto}.kpi-hero-item .flip-wrap{height:180px}.kpi-val-hero{font-size:38px}
+  .kpi-small-item .flip-wrap,.kpi-wide-item .flip-wrap{height:160px}
+  .kpi-wide-item{grid-column:auto}
+  .g2,.g3,.hyp-grid{grid-template-columns:1fr}
+  .g4,.guardrail-row,.dropoff-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<nav class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-title">📚 BookWise</div>
+    <div class="sb-logo-sub">Growth Dashboard</div>
+  </div>
+  <div class="sb-section">Data</div>
+  <a class="sb-link active" href="#zone1" onclick="setNav(this)"><span class="sb-icon">📊</span> KPI Overview</a>
+  <a class="sb-link" href="#zone2" onclick="setNav(this)"><span class="sb-icon">🔽</span> Core Funnel</a>
+  <a class="sb-link" href="#zone3" onclick="setNav(this)"><span class="sb-icon">📈</span> Retention</a>
+  <a class="sb-link" href="#zone4" onclick="setNav(this)"><span class="sb-icon">🎨</span> UA Creative</a>
+  <a class="sb-link" href="#zone5" onclick="setNav(this)"><span class="sb-icon">👤</span> User Behavior</a>
+  <div class="sb-section">Analysis</div>
+  <a class="sb-link" href="#zone6" onclick="setNav(this)"><span class="sb-icon">🧪</span> Hypothesis Board</a>
+  <a class="sb-link" href="#zone8" onclick="setNav(this)"><span class="sb-icon">🌳</span> Strategy Trees</a>
+  <a class="sb-link" href="#zone7" onclick="setNav(this)"><span class="sb-icon">⚡</span> Summary</a>
+  <div class="sb-footer">
+    <strong>BookWise Android</strong><br>
+    US Market · 6 rounds<br>
+    Dec 2025 – Mar 2026
+  </div>
+</nav>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<main class="main"><div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="hdr-left">
+    <h1>BookWise Growth Dashboard</h1>
+    <div class="hdr-sub">
+      Book Summary · Android · US market
+      <span class="tag">R2 → R7 + Concept</span>
+      <span class="tag live">● Concept Test Active</span>
+    </div>
+  </div>
+  <div class="hdr-right">
+    Updated Mar 24, 2026<br>
+    6 rounds · 954 total installs<br>
+    <span style="color:var(--faint)">Data: Dec 15 '25 – Mar 23 '26</span>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════
+     ZONE 1 — KPI OVERVIEW (data available only)
+     ══════════════════════════════════════════════ -->
+<section id="zone1">
+  <div class="zone-label">KPI Overview · Priority metrics where data exists</div>
+  <div class="kpi-hero-grid">
+
+    <!-- NORTH STAR: D1 Retention (2-row hero, top-left largest) -->
+    <div class="kpi-hero-item">
+      <div class="flip-wrap" style="height:318px">
+        <div class="flipper">
+          <div class="flip-front">
+            <div class="ns-badge">⭐ North Star Metric</div>
+            <div class="kpi-lbl">D1 Retention (R7)</div>
+            <div class="kpi-val kpi-val-hero" style="color:var(--bad)">8%</div>
+            <div class="kpi-bench">Benchmark: &gt;35% EdTech · Minimum viable: 15%</div>
+            <div class="kpi-status stat-r">Critical — 4× below benchmark</div>
+            <div class="kpi-sparkline">
+              <svg viewBox="0 0 100 36" preserveAspectRatio="none" style="height:36px">
+                <defs><linearGradient id="sg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b82f6" stop-opacity=".15"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0,30 L25,6 L50,0 L75,12 L100,30 L100,36 L0,36Z" fill="url(#sg1)"/>
+                <path d="M0,30 L25,6 L50,0 L75,12 L100,30" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="50" cy="0" r="2.5" fill="#22c55e"/><circle cx="100" cy="30" r="2.5" fill="#ef4444"/>
+              </svg>
+            </div>
+            <div style="font-size:11px;color:var(--faint);margin-top:8px;display:flex;justify-content:space-between">
+              <span>R3: 5%</span><span>R5: 9%</span><span style="color:var(--good);font-weight:600">R6: 10%↑</span><span>R7: 8%</span><span style="color:var(--bad)">Concept: 5%↓</span>
+            </div>
+            <div class="hint">hover to flip →</div>
+          </div>
+          <div class="flip-back">
+            <div class="back-lbl">Habit Formation Signal</div>
+            <div class="back-desc">Users active on Day 1 after install. Peaked at 10% (R6), regressed in R7 and Concept. Minimum for viable subscription LTV: 15%+. No creative has cleared that bar.</div>
+            <div class="back-act">→ Fix first-session value delivery. Target: Complete Summary rate → 30%+ on D0.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Onboarding Completion -->
+    <div class="kpi-small-item">
+      <div class="flip-wrap" style="height:152px">
+        <div class="flipper">
+          <div class="flip-front">
+            <div class="kpi-lbl">Onboarding Completion (R7)</div>
+            <div class="kpi-val" style="color:var(--bad)">6.4%</div>
+            <div class="kpi-bench">Benchmark: &gt;60% · R6: 3.9%</div>
+            <div class="kpi-status stat-r">10× below target</div>
+            <div class="hint">hover →</div>
+          </div>
+          <div class="flip-back">
+            <div class="back-lbl">Summary Completion Signal</div>
+            <div class="back-desc">R6: 3.9% → R7: 6.4%. Only 13/33 who play 5s finish a summary. Bottleneck: content playback, not the questionnaire.</div>
+            <div class="back-act">→ Shorten summaries, add progress bar.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TSPU -->
+    <div class="kpi-small-item">
+      <div class="flip-wrap" style="height:152px">
+        <div class="flipper">
+          <div class="flip-front">
+            <div class="kpi-lbl">Playtime D0 / TSPU (R7)</div>
+            <div class="kpi-val" style="color:var(--warn)">2m 42s</div>
+            <div class="kpi-bench">Peak: 5m 18s (R2) · Concept: 52s</div>
+            <div class="kpi-status stat-y">Declining trend</div>
+            <div class="hint">hover →</div>
+          </div>
+          <div class="flip-back">
+            <div class="back-lbl">Behavioral Signal — Playtime Trend</div>
+            <div class="back-desc">R2: 5.3m → Concept: 0.87m. Sharp decline as spend scaled. Less than 1 completion per session.</div>
+            <div class="back-act">→ If TSPU &lt;2m after onboarding fix, content mismatch is root cause.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D7 Retention — churn proxy, spans 2 cols -->
+    <div class="kpi-wide-item">
+      <div class="flip-wrap" style="height:152px">
+        <div class="flipper">
+          <div class="flip-front" style="display:flex;gap:24px;align-items:center">
+            <div style="flex:0 0 auto">
+              <div class="kpi-lbl">D7 Retention / Churn (R7)</div>
+              <div class="kpi-val" style="color:var(--bad)">1%</div>
+              <div class="kpi-bench">Benchmark: &gt;20% · Concept: 0%</div>
+              <div class="kpi-status stat-r">No habit forming</div>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:10px;color:var(--faint);margin-bottom:4px">Trend across rounds</div>
+              <svg viewBox="0 0 100 28" preserveAspectRatio="none" style="width:100%;height:28px;display:block">
+                <path d="M0,6 L33,0 L67,22 L100,28" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="0" cy="6" r="2.5" fill="#f59e0b"/><circle cx="33" cy="0" r="2.5" fill="#22c55e"/>
+                <circle cx="67" cy="22" r="2.5" fill="#ef4444"/><circle cx="100" cy="28" r="2.5" fill="#ef4444"/>
+              </svg>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-top:2px">
+                <span>R3: 4%</span><span style="color:var(--good)">R5: 5%</span><span style="color:var(--bad)">R7: 1%</span><span style="color:var(--bad)">Concept: 0%</span>
+              </div>
+            </div>
+            <div class="hint">hover to flip →</div>
+          </div>
+          <div class="flip-back" style="flex-direction:row;gap:20px;align-items:center">
+            <div style="flex:1"><div class="back-lbl">PMF Verification — Habit Loop</div><div class="back-desc">D7 &lt;5% = no habit loop. Gamification (streak/badges) not yet built.</div></div>
+            <div style="flex:1"><div class="back-act">→ Scale gate: D7 ≥ 10% required. Build streak MVP after D1 fix.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Quality Guardrails -->
+  <div class="guardrail-row">
+    <div class="gr-card"><div class="gr-val">954</div><div class="gr-lbl">Total Installs</div></div>
+    <div class="gr-card"><div class="gr-val">$3,499</div><div class="gr-lbl">Total Spend</div></div>
+    <div class="gr-card"><div class="gr-val" style="color:var(--warn)">R6 + R7</div><div class="gr-lbl">Rounds w/ In-App Events</div></div>
+    <div class="gr-card"><div class="gr-val">Mar 23</div><div class="gr-lbl">Latest Data Point</div></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     ZONE 2 — CORE FUNNEL
+     ══════════════════════════════════════════════ -->
+<section id="zone2">
+  <div class="zone-label">Core Funnel · Pre-install acquisition → post-install engagement · All 6 rounds</div>
+
+  <!-- PRE-INSTALL: All 6 Rounds -->
+  <div class="chart-card" style="margin-bottom:var(--gap)">
+    <div class="card-title">Paid Acquisition Pipeline — All 6 Rounds</div>
+    <div class="card-sub">Impression → Click → Install for every round · CTR and CVR consistent at ~2% CTR across rounds</div>
+    <div class="tbl-wrap">
+      <table class="data-tbl">
+        <thead><tr><th>Round</th><th style="font-size:10px;color:var(--faint)">Period</th><th class="num">Impressions</th><th class="num">CTR</th><th class="num">Clicks</th><th class="num">CVR</th><th class="num">Installs</th><th class="num">CPI</th><th class="num">Spend</th></tr></thead>
+        <tbody>
+          <tr><td><strong>R2</strong></td><td style="font-size:11px;color:var(--faint)">Dec 15–17</td><td class="num">2,214</td><td class="num cr">1.0%</td><td class="num">26</td><td class="num cg">38.0%</td><td class="num">10</td><td class="num cg">$2.66</td><td class="num">$27</td></tr>
+          <tr><td><strong>R3</strong></td><td style="font-size:11px;color:var(--faint)">Dec 30–Jan 4</td><td class="num">22,563</td><td class="num cy">2.0%</td><td class="num">407</td><td class="num cy">20.0%</td><td class="num">81</td><td class="num cg">$3.43</td><td class="num">$278</td></tr>
+          <tr><td><strong>R5</strong></td><td style="font-size:11px;color:var(--faint)">Jan 8–14</td><td class="num">70,919</td><td class="num cy">2.0%</td><td class="num">1,216</td><td class="num cy">19.0%</td><td class="num">229</td><td class="num cy">$3.93</td><td class="num">$900</td></tr>
+          <tr><td><strong>R6</strong></td><td style="font-size:11px;color:var(--faint)">Jan 22–26</td><td class="num">84,886</td><td class="num cy">2.0%</td><td class="num">1,703</td><td class="num cr">14.0%</td><td class="num">230</td><td class="num cr">$4.80</td><td class="num">$1,095</td></tr>
+          <tr><td><strong>R7</strong></td><td style="font-size:11px;color:var(--faint)">Feb 14–20</td><td class="num">67,622</td><td class="num cy">2.0%</td><td class="num">1,605</td><td class="num cy">16.0%</td><td class="num">249</td><td class="num cg">$2.78</td><td class="num">$694</td></tr>
+          <tr style="background:rgba(255,107,0,.03)"><td><strong>Concept</strong></td><td style="font-size:11px;color:var(--faint)">Mar 13–23</td><td class="num">33,905</td><td class="num cg">3.0%</td><td class="num">1,006</td><td class="num cy">15.0%</td><td class="num">155</td><td class="num cg">$3.30</td><td class="num">$505</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- POST-INSTALL: In-App Visual Funnel -->
+  <div class="chart-card">
+    <div class="card-title">In-App Funnel — Step-by-Step Drop-off</div>
+    <div class="card-sub">R7 shows full onboarding steps · R6 has Play5s + Complete only · 🟡 = inferred from onboarding event data</div>
+    <div class="tab-row">
+      <div class="tab active" onclick="showFunnel('r7',this)">R7 · Feb 14–20 · Full</div>
+      <div class="tab" onclick="showFunnel('r6',this)">R6 · Jan 22–26 · Partial</div>
+    </div>
+
+    <!-- R7 Funnel — expanded with all onboarding steps -->
+    <div id="funnel-r7" class="fn-rows">
+      <div class="fn-row"><div class="fn-lbl">Install</div><div class="fn-bg"><div class="fn-bar" style="width:100%;background:var(--blue)">100%</div></div><div class="fn-n" style="color:var(--blue)">249</div><div class="fn-drop"></div></div>
+      <div class="fn-row"><div class="fn-lbl">Welcome / Onboard ✓ <span style="font-size:9px;color:var(--faint)">🟡</span></div><div class="fn-bg"><div class="fn-bar" style="width:67%;background:var(--blue)">67%</div></div><div class="fn-n" style="color:var(--blue)">167</div><div class="fn-drop" style="color:var(--muted)">▼ 33%</div></div>
+      <div class="fn-row"><div class="fn-lbl">Book Selected <span style="font-size:9px;color:var(--faint)">🟡</span></div><div class="fn-bg"><div class="fn-bar" style="width:43.8%;background:var(--blue)">44%</div></div><div class="fn-n" style="color:var(--blue)">109</div><div class="fn-drop" style="color:var(--muted)">▼ 34.7%</div></div>
+      <div class="fn-row"><div class="fn-lbl">Press Listen <span style="font-size:9px;color:var(--faint)">🟡</span></div><div class="fn-bg"><div class="fn-bar" style="width:32.9%;background:var(--warn)">33%</div></div><div class="fn-n" style="color:var(--warn)">82</div><div class="fn-drop" style="color:var(--muted)">▼ 24.8%</div></div>
+      <div class="fn-row"><div class="fn-lbl">Play ≥5 Seconds 🔵</div><div class="fn-bg"><div class="fn-bar" style="width:13.3%;background:var(--bad)">13.3%</div></div><div class="fn-n" style="color:var(--bad)">33</div><div class="fn-drop">▼ 59.8%</div></div>
+      <div class="fn-row"><div class="fn-lbl">Complete Summary 🔵</div><div class="fn-bg"><div class="fn-bar" style="width:6.4%;background:var(--bad)">6.4%</div></div><div class="fn-n" style="color:var(--bad)">16</div><div class="fn-drop">▼ 51.5%</div></div>
+      <div class="fn-row"><div class="fn-lbl">Return D1 🔵</div><div class="fn-bg"><div class="fn-bar" style="width:8%;background:var(--bad)">8%</div></div><div class="fn-n" style="color:var(--bad)">20</div><div class="fn-drop">▼ 80%+</div></div>
+    </div>
+
+    <!-- R6 Funnel — limited event data -->
+    <div id="funnel-r6" class="fn-rows" style="display:none">
+      <div class="fn-row"><div class="fn-lbl">Install</div><div class="fn-bg"><div class="fn-bar" style="width:100%;background:var(--blue)">100%</div></div><div class="fn-n" style="color:var(--blue)">230</div><div class="fn-drop"></div></div>
+      <div class="fn-row"><div class="fn-lbl" style="color:var(--faint)">Onboard / Select</div><div class="fn-bg" style="background:#F0F0F0"><div style="height:100%;display:flex;align-items:center;padding-left:10px;font-size:11px;color:var(--faint)">⚪ No event data</div></div><div class="fn-n cna">—</div><div class="fn-drop"></div></div>
+      <div class="fn-row"><div class="fn-lbl" style="color:var(--faint)">Press Listen</div><div class="fn-bg" style="background:#F0F0F0"><div style="height:100%;display:flex;align-items:center;padding-left:10px;font-size:11px;color:var(--faint)">⚪ No event data</div></div><div class="fn-n cna">—</div><div class="fn-drop"></div></div>
+      <div class="fn-row"><div class="fn-lbl">Play ≥5 Seconds 🔵</div><div class="fn-bg"><div class="fn-bar" style="width:30.9%;background:var(--warn)">30.9%</div></div><div class="fn-n" style="color:var(--warn)">71</div><div class="fn-drop">▼ 69.1%</div></div>
+      <div class="fn-row"><div class="fn-lbl">Complete Summary 🔵</div><div class="fn-bg"><div class="fn-bar" style="width:3.9%;background:var(--bad)">3.9%</div></div><div class="fn-n" style="color:var(--bad)">9</div><div class="fn-drop">▼ 87.3%</div></div>
+      <div class="fn-row"><div class="fn-lbl">Return D1 🔵</div><div class="fn-bg"><div class="fn-bar" style="width:10%;background:var(--warn)">10%</div></div><div class="fn-n" style="color:var(--warn)">23</div><div class="fn-drop">▼ 90%</div></div>
+    </div>
+
+    <!-- Drop-off cards -->
+    <div id="do-r7" class="dropoff-row">
+      <div class="do-card"><div class="do-from">Press Listen → Play 5s</div><div class="do-val" style="color:var(--bad)">59.8%</div><div class="do-label">49 of 82 pressers lost ← critical</div></div>
+      <div class="do-card"><div class="do-from">Play 5s → Complete</div><div class="do-val" style="color:var(--warn)">51.5%</div><div class="do-label">17 of 33 players lost</div></div>
+      <div class="do-card"><div class="do-from">Complete → D1 Return</div><div class="do-val" style="color:var(--bad)">80%+</div><div class="do-label">~156 non-returners · 8% D1</div></div>
+    </div>
+    <div id="do-r6" class="dropoff-row" style="display:none">
+      <div class="do-card"><div class="do-from">Install → Play 5s</div><div class="do-val" style="color:var(--bad)">69.1%</div><div class="do-label">159 users never tried content</div></div>
+      <div class="do-card"><div class="do-from">Play 5s → Complete</div><div class="do-val" style="color:var(--bad)">87.3%</div><div class="do-label">62 of 71 players lost</div></div>
+      <div class="do-card"><div class="do-from">Complete → D1 Return</div><div class="do-val" style="color:var(--bad)">90%</div><div class="do-label">9 completers → 10% D1 avg</div></div>
+    </div>
+
+    <!-- All-rounds funnel step table -->
+    <div class="funnel-section-lbl"><span>All Rounds — Full Funnel Comparison (🔵 actual · ⚪ no data)</span></div>
+    <div class="tbl-wrap">
+      <table class="data-tbl">
+        <thead><tr><th>Round</th><th class="num">Installs</th><th class="num">Onboard%</th><th class="num">Play 5s%</th><th class="num">Complete%</th><th class="num">D1%</th><th class="num">D3%</th><th class="num">D7%</th></tr></thead>
+        <tbody>
+          <tr><td>R2</td><td class="num">10</td><td class="num cna">⚪ —</td><td class="num cna">⚪ —</td><td class="num cna">⚪ —</td><td class="num cna">⚪ —</td><td class="num cna">⚪ —</td><td class="num cna">⚪ —</td></tr>
+          <tr><td>R3</td><td class="num">81</td><td class="num cna">⚪ —</td><td class="num cna">⚪ —</td><td class="num cna">⚪ —</td><td class="num cy">🔵 5%</td><td class="num cy">🔵 6%</td><td class="num cy">🔵 4%</td></tr>
+          <tr><td>R5</td><td class="num">229</td><td class="num cna">⚪ —</td><td class="num cna">⚪ —</td><td class="num cna">⚪ —</td><td class="num cy">🔵 9%</td><td class="num cy">🔵 5%</td><td class="num cy">🔵 5%</td></tr>
+          <tr><td>R6</td><td class="num">230</td><td class="num cna">⚪ —</td><td class="num cy">🔵 30.9%</td><td class="num cr">🔵 3.9%</td><td class="num cy">🔵 10%</td><td class="num cy">🔵 7%</td><td class="num cna">⚪ —</td></tr>
+          <tr style="background:rgba(59,130,246,.03)"><td><strong>R7</strong></td><td class="num"><strong>249</strong></td><td class="num cy">🟡 67%</td><td class="num cr">🔵 13.3%</td><td class="num cr">🔵 6.4%</td><td class="num cr">🔵 8%</td><td class="num cr">🔵 2%</td><td class="num cr">🔵 1%</td></tr>
+          <tr><td>Concept</td><td class="num">155</td><td class="num cna">⚪ —</td><td class="num cna">⚪ —</td><td class="num cna">⚪ —</td><td class="num cr">🔵 5%</td><td class="num cy">🔵 4%</td><td class="num cr">🔵 0%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="insight amber"><strong>R7 critical insight:</strong> The biggest single-step drop is <strong>Press Listen → Play 5s: 59.8% lost</strong> (82 pressed Listen, only 33 heard audio). Users intent to listen but the playback experience failed them. This is more precise than the old "86.7% Install→Play5s" figure — the drop happens at the playback trigger, not at app open. Fix: auto-play preview, not just UI changes.</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     ZONE 3 — RETENTION & ENGAGEMENT
+     ══════════════════════════════════════════════ -->
+<section id="zone3">
+  <div class="zone-label">Retention & Engagement · Are users coming back?</div>
+  <div class="g2">
+
+    <!-- Retention Trend Chart -->
+    <div class="chart-card">
+      <div class="card-title">D1 / D3 / D7 Retention Trend</div>
+      <div class="card-sub">Red dashed = 15% minimum viable D1 threshold</div>
+      <div class="chart-wrap"><canvas id="retChart"></canvas></div>
+    </div>
+
+    <!-- Round-by-Round Table -->
+    <div class="chart-card">
+      <div class="card-title">Round-by-Round Comparison</div>
+      <div class="card-sub">Color: <span class="cg">green</span> = on-target · <span class="cy">amber</span> = partial · <span class="cr">red</span> = failing</div>
+      <div class="tbl-wrap">
+        <table class="data-tbl">
+          <thead><tr><th>Round</th><th class="num">Installs</th><th class="num">CTR</th><th class="num">CVR</th><th class="num">CPI</th><th class="num">D1</th><th class="num">D3</th><th class="num">D7</th><th class="num">TSPU</th></tr></thead>
+          <tbody>
+            <tr><td>R2</td><td class="num">10</td><td class="num cr">1.0%</td><td class="num cg">38%</td><td class="num cg">$2.66</td><td class="num cna">—</td><td class="num cna">—</td><td class="num cna">—</td><td class="num cg">5.3m</td></tr>
+            <tr><td>R3</td><td class="num">81</td><td class="num cy">2.0%</td><td class="num cy">20%</td><td class="num cg">$3.43</td><td class="num cr">5%</td><td class="num cy">6%</td><td class="num cy">4%</td><td class="num cg">3.4m</td></tr>
+            <tr><td>R5</td><td class="num">229</td><td class="num cy">2.0%</td><td class="num cy">19%</td><td class="num cy">$3.93</td><td class="num cy">9%</td><td class="num cy">5%</td><td class="num cy">5%</td><td class="num cr">1.7m</td></tr>
+            <tr><td>R6</td><td class="num">230</td><td class="num cy">2.0%</td><td class="num cr">14%</td><td class="num cr">$4.80</td><td class="num cy">10%</td><td class="num cy">7%</td><td class="num cna">—</td><td class="num cy">2.3m</td></tr>
+            <tr><td>R7</td><td class="num">249</td><td class="num cy">2.0%</td><td class="num cy">16%</td><td class="num cg">$2.78</td><td class="num cy">8%</td><td class="num cr">2%</td><td class="num cr">1%</td><td class="num cy">2.7m</td></tr>
+            <tr><td>Concept</td><td class="num">155</td><td class="num cg">3.0%</td><td class="num cy">15%</td><td class="num cg">$3.30</td><td class="num cr">5%</td><td class="num cy">4%</td><td class="num cr">0%</td><td class="num cr">0.9m</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="insight red"><strong>Insight:</strong> D1 peaked at 10% (R6) then regressed — 8% in R7, 5% in Concept. D7 is trending toward zero: no habit loop is forming. TSPU dropped 6× from R2 (5.3m) to Concept (0.87m) as spend scaled. The data shows the product is not retaining users at any viable level for a subscription model (minimum: D1 ≥ 15%).</div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     ZONE 4 — UA CREATIVE PERFORMANCE
+     ══════════════════════════════════════════════ -->
+<section id="zone4">
+  <div class="zone-label">UA Creative Performance · Which ad attracts the right users?</div>
+
+  <!-- Creative Performance Table -->
+  <div class="chart-card" style="margin-bottom:var(--gap)">
+    <div class="card-title">Creative-Level Performance Scoreboard</div>
+    <div class="card-sub">11 creatives across R6, R7, Concept · sorted by D1 retention</div>
+    <div class="tbl-wrap">
+      <table class="data-tbl">
+        <thead><tr><th>Creative</th><th>Round</th><th class="num">Spend</th><th class="num">Installs</th><th class="num">CTR</th><th class="num">CVR</th><th class="num">CPI</th><th class="num">D1%</th><th class="num">D3%</th><th class="num">D7%</th><th class="num">TSPU</th></tr></thead>
+        <tbody>
+          <tr><td>Image-04</td><td>R7</td><td class="num">$159</td><td class="num">32</td><td class="num cy">2%</td><td class="num cy">16%</td><td class="num cr">$5.00</td><td class="num cg">19%</td><td class="num cr">0%</td><td class="num cr">0%</td><td class="num cr">0.8m</td></tr>
+          <tr><td>VD-7minsprep</td><td>R6</td><td class="num">$27</td><td class="num">6</td><td class="num cy">2%</td><td class="num cr">14%</td><td class="num cr">$4.50</td><td class="num cg">17%</td><td class="num cg">100%</td><td class="num cna">—</td><td class="num cg">5.4m</td></tr>
+          <tr><td>Image-02</td><td>R7</td><td class="num">$340</td><td class="num">86</td><td class="num cy">2%</td><td class="num cy">16%</td><td class="num cy">$4.00</td><td class="num cy">13%</td><td class="num cy">5%</td><td class="num cr">0%</td><td class="num cy">2.8m</td></tr>
+          <tr><td>Image-02</td><td>R6</td><td class="num">$573</td><td class="num">131</td><td class="num cy">2%</td><td class="num cr">14%</td><td class="num cr">$4.40</td><td class="num cy">13%</td><td class="num cg">10%</td><td class="num cna">—</td><td class="num cr">1.7m</td></tr>
+          <tr><td>Image-04</td><td>R6</td><td class="num">$270</td><td class="num">61</td><td class="num cy">2%</td><td class="num cr">14%</td><td class="num cr">$4.40</td><td class="num cy">7%</td><td class="num cy">5%</td><td class="num cna">—</td><td class="num cg">3.2m</td></tr>
+          <tr><td>Big Impact</td><td>Concept</td><td class="num">$92</td><td class="num">21</td><td class="num cg">3%</td><td class="num cy">15%</td><td class="num cr">$4.40</td><td class="num cr">5%</td><td class="num cg">11%</td><td class="num cna">—</td><td class="num cna">—</td></tr>
+          <tr><td>Sex Skill 2</td><td>Concept</td><td class="num">$268</td><td class="num">94</td><td class="num cg">3%</td><td class="num cy">15%</td><td class="num cy">$2.90</td><td class="num cr">5%</td><td class="num cr">2%</td><td class="num cr">0%</td><td class="num cna">—</td></tr>
+          <tr><td>Sex Skill</td><td>R7</td><td class="num">$193</td><td class="num">131</td><td class="num cy">2%</td><td class="num cy">16%</td><td class="num cg">$1.50</td><td class="num cr">3%</td><td class="num cr">1%</td><td class="num cr">2%</td><td class="num cg">3.1m</td></tr>
+          <tr><td>VD-6 Feature 2</td><td>R6</td><td class="num">$197</td><td class="num">49</td><td class="num cy">2%</td><td class="num cr">14%</td><td class="num cy">$4.00</td><td class="num cr">3%</td><td class="num cr">0%</td><td class="num cna">—</td><td class="num cy">2.1m</td></tr>
+          <tr><td>Listening</td><td>Concept</td><td class="num">$109</td><td class="num">32</td><td class="num cg">3%</td><td class="num cy">15%</td><td class="num cy">$3.40</td><td class="num cr">0%</td><td class="num cr">0%</td><td class="num cna">—</td><td class="num cna">—</td></tr>
+          <tr><td>Sex Skill 3</td><td>Concept</td><td class="num">$36</td><td class="num">8</td><td class="num cg">3%</td><td class="num cy">15%</td><td class="num cr">$4.50</td><td class="num cr">0%</td><td class="num cr">0%</td><td class="num cna">—</td><td class="num cna">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="g2">
+    <!-- CPI vs D1 Scatter -->
+    <div class="chart-card">
+      <div class="card-title">CPI vs D1 Retention — Volume / Quality Tension</div>
+      <div class="card-sub">Bubble size = spend · Bottom-right = best (low CPI + high D1)</div>
+      <div class="chart-wrap"><canvas id="scatterChart"></canvas></div>
+    </div>
+
+    <!-- Installs + TSPU Combo -->
+    <div class="chart-card">
+      <div class="card-title">Installs &amp; Playtime (TSPU) per Round</div>
+      <div class="card-sub">Bars = installs · Line = avg time spent D0</div>
+      <div class="chart-wrap"><canvas id="volChart"></canvas></div>
+    </div>
+  </div>
+  <div class="insight blue"><strong>Insight:</strong> Volume vs quality tension is clear. "Sex Skill" drives 131 installs at $1.50 CPI but only 3% D1 — wrong-fit users. "Image-04" achieves 19% D1 (above 15% threshold!) but only 32 installs at $5.00 CPI. No single creative achieves both low cost and high retention yet. Image-04 is the only concept that crosses the minimum viable D1 threshold.</div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     ZONE 5 — USER BEHAVIOR & PREFERENCES
+     ══════════════════════════════════════════════ -->
+<section id="zone5">
+  <div class="zone-label">User Behavior &amp; Preferences · What the data tells us about who is actually using BookWise</div>
+
+  <!-- 5A: Audio Demand Chart -->
+  <div class="chart-card" style="margin-bottom:var(--gap)">
+    <div class="card-title">Audio Demand Signal — Books × Creative Context <span class="data-badge badge-actual">🔵 Actual data</span></div>
+    <div class="card-sub">Fake-door test ran during R6 (Jan 22–26) · Image-02 + Image-04 users · 57% overall click rate across 230 installs</div>
+    <div class="g2" style="gap:var(--gap);margin-top:8px">
+      <!-- Books chart -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px">Books by audio click count <span class="data-badge badge-actual">🔵</span></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="audioChart"></canvas></div>
+      </div>
+      <!-- Creative context breakdown -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px">R6 creative mix when audio test ran <span class="data-badge badge-actual">🔵</span></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="audioContextChart"></canvas></div>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="insight amber" style="margin-top:0"><strong>Book demand:</strong> "101 Essays" (non-fiction/self-help) had 46 clicks — 3× any other title. Quality Readers and Balanced Readers drove this signal. The Listening creative (Concept, 0% D1) confirmed: users want audio but the product didn't deliver it.</div>
+      <div class="insight blue" style="margin-top:0"><strong>Creative context:</strong> Image-02 (57% of R6 installs) and Image-04 (27%) attracted "reader-type" users — these are the segments most likely clicking audio for non-fiction books. Sex Skill / curiosity-hook users would skew toward lighter content.</div>
+    </div>
+  </div>
+
+  <!-- 5B: User Segment Profiles -->
+  <div class="card-title" style="margin-bottom:6px">User Segment Profiles — Derived from Creative Performance <span class="data-badge badge-inferred">🟡 Inferred</span></div>
+  <div class="card-sub" style="margin-bottom:10px">3 distinct user profiles emerging from ad creative + retention data across R6, R7, Concept</div>
+  <div class="ub-segment-grid">
+
+    <div class="seg-card" style="border-top:3px solid var(--bad)">
+      <div class="seg-name">Volume Browser</div>
+      <div class="seg-creative">Source: Sex Skill creative · R7 · 131 installs</div>
+      <div class="seg-stat"><span class="seg-stat-label">Acquisition cost</span><span class="seg-stat-val cg">$1.50 CPI</span></div>
+      <div class="seg-stat"><span class="seg-stat-label">Day 1 retention</span><span class="seg-stat-val cr">3%</span></div>
+      <div class="seg-stat"><span class="seg-stat-label">Day 3 retention</span><span class="seg-stat-val cr">1%</span></div>
+      <div class="seg-stat"><span class="seg-stat-label">Playtime D0</span><span class="seg-stat-val">3.1 min</span></div>
+      <div class="seg-stat"><span class="seg-stat-label">Profile</span><span class="seg-stat-val cr">Curiosity-click</span></div>
+      <div class="seg-fit fit-wrong">✗ Wrong-fit user</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">Attracted by provocative hook. No intent to read seriously. Low D1 despite high volume makes this segment LTV-negative at current $90 price point.</div>
+    </div>
+
+    <div class="seg-card" style="border-top:3px solid var(--good)">
+      <div class="seg-name">Quality Reader</div>
+      <div class="seg-creative">Source: Image-04 creative · R7 · 32 installs</div>
+      <div class="seg-stat"><span class="seg-stat-label">Acquisition cost</span><span class="seg-stat-val cr">$5.00 CPI</span></div>
+      <div class="seg-stat"><span class="seg-stat-label">Day 1 retention</span><span class="seg-stat-val cg">19%</span></div>
+      <div class="seg-stat"><span class="seg-stat-label">Day 3 retention</span><span class="seg-stat-val cr">0%</span></div>
+      <div class="seg-stat"><span class="seg-stat-label">Playtime D0</span><span class="seg-stat-val cr">0.8 min</span></div>
+      <div class="seg-stat"><span class="seg-stat-label">Profile</span><span class="seg-stat-val cg">Intent reader</span></div>
+      <div class="seg-fit fit-right">✓ Right-fit user</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">Returns on Day 1 (best D1 in dataset). But D3 drops to 0% — product fails to deliver on the promise that brought them back. D0 playtime is low, suggesting friction in the content experience.</div>
+    </div>
+
+    <div class="seg-card" style="border-top:3px solid var(--warn)">
+      <div class="seg-name">Balanced Reader</div>
+      <div class="seg-creative">Source: Image-02 creative · R7 · 86 installs</div>
+      <div class="seg-stat"><span class="seg-stat-label">Acquisition cost</span><span class="seg-stat-val cy">$4.00 CPI</span></div>
+      <div class="seg-stat"><span class="seg-stat-label">Day 1 retention</span><span class="seg-stat-val cy">13%</span></div>
+      <div class="seg-stat"><span class="seg-stat-label">Day 3 retention</span><span class="seg-stat-val cy">5%</span></div>
+      <div class="seg-stat"><span class="seg-stat-label">Playtime D0</span><span class="seg-stat-val cy">2.8 min</span></div>
+      <div class="seg-stat"><span class="seg-stat-label">Profile</span><span class="seg-stat-val cy">Moderate intent</span></div>
+      <div class="seg-fit fit-mod">~ Moderate-fit user</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">Best balance of volume and quality. 13% D1 is below the 15% threshold but closest to viable. D3 at 5% shows some stickiness. Currently the most scalable segment — closest to PMF.</div>
+    </div>
+
+  </div>
+
+  <!-- 5C: Engagement Depth -->
+  <div class="card-title" style="margin:18px 0 8px">Engagement Depth Signals <span class="data-badge badge-actual">🔵 Actual data</span></div>
+  <div class="eng-stat-row">
+    <div class="eng-stat">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint)">Play ≥5s Rate · R6</div>
+      <div class="eng-val" style="color:var(--warn)">30.9%</div>
+      <div class="eng-label">230 installs → 71 played</div>
+      <div class="eng-note">69% never started any content</div>
+    </div>
+    <div class="eng-stat">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint)">Play ≥5s Rate · R7</div>
+      <div class="eng-val" style="color:var(--bad)">13.3%</div>
+      <div class="eng-label">249 installs → 33 played</div>
+      <div class="eng-note">87% never started — worsening trend</div>
+    </div>
+    <div class="eng-stat">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint)">Completion Rate · R7</div>
+      <div class="eng-val" style="color:var(--warn)">48.5%</div>
+      <div class="eng-label">33 players → 16 completed</div>
+      <div class="eng-note">Of those who start, ~half finish <span class="data-badge badge-actual">🔵</span></div>
+    </div>
+  </div>
+  <div class="insight red" style="margin-top:12px"><strong>Critical drop-off:</strong> The engagement cliff happens at app open → content start, not during playback. 87% of R7 users installed but never played a single second. Of the 13% who did start, 48.5% completed the summary — a surprisingly healthy mid-funnel. The problem is the top of the funnel, not the content quality.</div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     ZONE 6 — HYPOTHESIS BOARD
+     ══════════════════════════════════════════════ -->
+<section id="zone6">
+  <div class="zone-label">Hypothesis Board · Click any card to expand · Evidence-weighted interpretation of the data above</div>
+  <div class="hyp-grid">
+
+    <!-- Card 1: Chargeback — Untested / Critical -->
+    <div class="hyp-card" onclick="toggleHyp(this)">
+      <div class="hyp-head">
+        <div class="hyp-bar" style="background:var(--bad);height:56px"></div>
+        <div class="hyp-body">
+          <div class="hyp-root">"Does our Stripe model survive real transaction chargeback rates?"</div>
+          <div class="hyp-name">Chargeback &lt; 20% — monetization survival</div>
+          <div class="hyp-signal">No data yet · blocks all scaling decisions</div>
+          <div class="hyp-conf-wrap">
+            <div class="hyp-conf-label"><span>Evidence strength</span><span style="color:var(--bad)">5%</span></div>
+            <div class="hyp-conf-track"><div class="hyp-conf-fill" style="width:5%;background:var(--bad)"></div></div>
+          </div>
+        </div>
+        <span class="hyp-badge b-crit">Untested</span>
+      </div>
+      <div class="hyp-detail">
+        <div class="hyp-evidence">🔴 No data</div>
+        <p>Direct Stripe payment model depends on chargeback rate staying below 20%. Selling at $90 to buffer losses. If chargeback exceeds 20%, full paywall model must be reconsidered. This is the highest-risk unknown in the entire business model.</p>
+        <div class="action">→ Pull Stripe chargeback data this week. Blocking decision.</div>
+      </div>
+    </div>
+
+    <!-- Card 2: D1 ≥ 15% — Failing -->
+    <div class="hyp-card" onclick="toggleHyp(this)">
+      <div class="hyp-head">
+        <div class="hyp-bar" style="background:var(--bad);height:56px"></div>
+        <div class="hyp-body">
+          <div class="hyp-root">"Is first-session value strong enough to bring users back tomorrow?"</div>
+          <div class="hyp-name">D1 Retention ≥ 15% — product viability floor</div>
+          <div class="hyp-signal">Current: 8% · Target: 15% min</div>
+          <div class="hyp-conf-wrap">
+            <div class="hyp-conf-label"><span>Evidence strength</span><span style="color:var(--bad)">90%</span></div>
+            <div class="hyp-conf-track"><div class="hyp-conf-fill" style="width:90%;background:var(--bad)"></div></div>
+          </div>
+        </div>
+        <span class="hyp-badge b-crit">Failing</span>
+      </div>
+      <div class="hyp-detail">
+        <div class="hyp-evidence">🔵 Actual data — R6: 10%, R7: 8%, R3: 5%</div>
+        <p>At D1 = 8%, subscription LTV is too low to cover CAC at any CPI above ~$2. 87% of R7 users never played a second of content. Only Image-04 (19% D1, n=32) clears the minimum bar — but the sample is too small to trust at scale.</p>
+        <div class="action">→ Sprint: auto-play preview on open. Target: completion → 30%+ on D0.</div>
+      </div>
+    </div>
+
+    <!-- Card 3: Deep Link — Active -->
+    <div class="hyp-card" onclick="toggleHyp(this)">
+      <div class="hyp-head">
+        <div class="hyp-bar" style="background:var(--warn);height:56px"></div>
+        <div class="hyp-body">
+          <div class="hyp-root">"Does matching ad content to in-app content improve user retention?"</div>
+          <div class="hyp-name">Ad-Product deep link match fixes retention</div>
+          <div class="hyp-signal">Mismatch confirmed · Fix pending</div>
+          <div class="hyp-conf-wrap">
+            <div class="hyp-conf-label"><span>Evidence strength</span><span style="color:var(--warn)">70%</span></div>
+            <div class="hyp-conf-track"><div class="hyp-conf-fill" style="width:70%;background:var(--warn)"></div></div>
+          </div>
+        </div>
+        <span class="hyp-badge b-act">Active</span>
+      </div>
+      <div class="hyp-detail">
+        <div class="hyp-evidence">🔵 Sex Skill: $1.50 CPI / 3% D1 · Image-04: $5.00 CPI / 19% D1</div>
+        <p>The D1 gap between Sex Skill (3%) and Image-04 (19%) is the strongest indirect evidence that ad-product fit drives retention. Root cause: "Sex Skill" sets an expectation the app doesn't deliver on. Deep link would route users directly to the content shown in the ad.</p>
+        <div class="action">→ Build deep link. Scale Image-04 to $300 with content match test.</div>
+      </div>
+    </div>
+
+    <!-- Card 4: Audio Demand — Active -->
+    <div class="hyp-card" onclick="toggleHyp(this)">
+      <div class="hyp-head">
+        <div class="hyp-bar" style="background:var(--warn);height:56px"></div>
+        <div class="hyp-body">
+          <div class="hyp-root">"Do users actually want to listen, not just read summaries?"</div>
+          <div class="hyp-name">57% audio demand — top books need real audio</div>
+          <div class="hyp-signal">Fake-door signal validated · Production pending</div>
+          <div class="hyp-conf-wrap">
+            <div class="hyp-conf-label"><span>Evidence strength</span><span style="color:var(--warn)">80%</span></div>
+            <div class="hyp-conf-track"><div class="hyp-conf-fill" style="width:80%;background:var(--warn)"></div></div>
+          </div>
+        </div>
+        <span class="hyp-badge b-act">Signal exists</span>
+      </div>
+      <div class="hyp-detail">
+        <div class="hyp-evidence">🔵 57% click rate on audio fake-door · "101 Essays" = 46 clicks (highest)</div>
+        <p>More than half of users tapped "Listen" before audio existed in the product. "101 Essays" — a self-help / essay format book — had 3× the clicks of any other title. However, the Listening creative (Concept) showed 0% D1 — users who expected audio and didn't get it churned immediately. ElevenLabs at $10–14/book is cost prohibitive. Gemini TTS being tested.</p>
+        <div class="action">→ Produce audio for top 6 books with Gemini TTS. Retest D1 with audio.</div>
+      </div>
+    </div>
+
+    <!-- Card 5: Full Paywall D1 — Active -->
+    <div class="hyp-card" onclick="toggleHyp(this)">
+      <div class="hyp-head">
+        <div class="hyp-bar" style="background:var(--warn);height:56px"></div>
+        <div class="hyp-body">
+          <div class="hyp-root">"Does an immediate paywall give better ROAS signal than a 7-day trial?"</div>
+          <div class="hyp-name">Full paywall Day 1 — not 7-day trial</div>
+          <div class="hyp-signal">Model chosen · Awaiting chargeback data</div>
+          <div class="hyp-conf-wrap">
+            <div class="hyp-conf-label"><span>Evidence strength</span><span style="color:var(--warn)">40%</span></div>
+            <div class="hyp-conf-track"><div class="hyp-conf-fill" style="width:40%;background:var(--warn)"></div></div>
+          </div>
+        </div>
+        <span class="hyp-badge b-act">Testing</span>
+      </div>
+      <div class="hyp-detail">
+        <div class="hyp-evidence">🟡 Inferred — no comparative A/B data yet</div>
+        <p>Day 1 paywall chosen over 7-day trial because UA needs a Day 1 payment signal for ROAS optimization. Trial introduces 1-week data delay that kills bidding cycles. Selling at $90 one-time. Viability depends entirely on chargeback rate staying under 20%.</p>
+        <div class="action">→ Validate once chargeback data arrives. If &gt;20%, revisit trial model.</div>
+      </div>
+    </div>
+
+    <!-- Card 6: Image ads — Validated -->
+    <div class="hyp-card" onclick="toggleHyp(this)">
+      <div class="hyp-head">
+        <div class="hyp-bar" style="background:var(--good);height:56px"></div>
+        <div class="hyp-body">
+          <div class="hyp-root">"Are static image ads more efficient than video for book summary content?"</div>
+          <div class="hyp-name">Image ads outperform video creatives</div>
+          <div class="hyp-signal">CPI $1.55–$5.00, IPM ~10 · Validated</div>
+          <div class="hyp-conf-wrap">
+            <div class="hyp-conf-label"><span>Evidence strength</span><span style="color:var(--good)">95%</span></div>
+            <div class="hyp-conf-track"><div class="hyp-conf-fill" style="width:95%;background:var(--good)"></div></div>
+          </div>
+        </div>
+        <span class="hyp-badge b-val">Validated</span>
+      </div>
+      <div class="hyp-detail">
+        <div class="hyp-evidence">🔵 Image-02 (R6+R7): consistent top performer · Video tested and dropped</div>
+        <p>Static image ads have consistently outperformed video across all rounds on CPI and IPM. Image-02 is the "incumbent best" — deployed across both R6 and R7 with similar results. Real-person images (Image-04) now show the best D1. Decision locked: image-first creative strategy.</p>
+        <div class="action">→ Continue image-first. Scale Image-04 + test "Big Impact" at $200.</div>
+      </div>
+    </div>
+
+    <!-- Card 7: Netflix Onboarding — Validated -->
+    <div class="hyp-card" onclick="toggleHyp(this)">
+      <div class="hyp-head">
+        <div class="hyp-bar" style="background:var(--good);height:56px"></div>
+        <div class="hyp-body">
+          <div class="hyp-root">"Does personalized interest selection increase early engagement?"</div>
+          <div class="hyp-name">Dynamic onboarding (Netflix style) increases activation</div>
+          <div class="hyp-signal">65% step CVR validated</div>
+          <div class="hyp-conf-wrap">
+            <div class="hyp-conf-label"><span>Evidence strength</span><span style="color:var(--good)">85%</span></div>
+            <div class="hyp-conf-track"><div class="hyp-conf-fill" style="width:85%;background:var(--good)"></div></div>
+          </div>
+        </div>
+        <span class="hyp-badge b-val">Validated</span>
+      </div>
+      <div class="hyp-detail">
+        <div class="hyp-evidence">🔵 167 completers → 109 book selections (65% CVR) → 82 press Listen (75% CVR)</div>
+        <p>Interest selection flow works — users who complete onboarding do select books and press Listen at high rates. The bottleneck is not the onboarding questionnaire. The collapse happens between "press Listen" and "actually hear audio." Fix the content playback experience, not the quiz.</p>
+        <div class="action">→ Don't rebuild onboarding. Sprint on content playback UX instead.</div>
+      </div>
+    </div>
+
+    <!-- Card 8: Brand Positioning — Open -->
+    <div class="hyp-card" onclick="toggleHyp(this)">
+      <div class="hyp-head">
+        <div class="hyp-bar" style="background:var(--blue);height:56px"></div>
+        <div class="hyp-body">
+          <div class="hyp-root">"Which positioning angle resonates most with our target audience?"</div>
+          <div class="hyp-name">Brand positioning angle — which scales UA + LTV?</div>
+          <div class="hyp-signal">5 angles identified · None tested at scale</div>
+          <div class="hyp-conf-wrap">
+            <div class="hyp-conf-label"><span>Evidence strength</span><span style="color:var(--blue)">10%</span></div>
+            <div class="hyp-conf-track"><div class="hyp-conf-fill" style="width:10%;background:var(--blue)"></div></div>
+          </div>
+        </div>
+        <span class="hyp-badge b-open">Open</span>
+      </div>
+      <div class="hyp-detail">
+        <div class="hyp-evidence">⚪ No data — emerging signals only from 3 rounds of creatives</div>
+        <p>5 positioning candidates: Authority/Expert ("become the smartest in the room"), Identity/Status ("people who read"), Time Compression ("book in 7 minutes"), Transformation ("change your thinking"), Niche Community ("curious minds"). Testing implicitly via ad creative performance — no dedicated positioning test exists yet. Audio demand signal may favor Time Compression + Accessibility angle.</p>
+        <div class="action">→ Let 3 months of ad data vote on positioning before committing.</div>
+      </div>
+    </div>
+
+    <!-- Card 9: Gamification — Open -->
+    <div class="hyp-card" onclick="toggleHyp(this)">
+      <div class="hyp-head">
+        <div class="hyp-bar" style="background:var(--blue);height:56px"></div>
+        <div class="hyp-body">
+          <div class="hyp-root">"Does streaks and badges build a daily reading habit?"</div>
+          <div class="hyp-name">Gamification (streak + badges) drives D7 retention</div>
+          <div class="hyp-signal">Duolingo model · Not yet built</div>
+          <div class="hyp-conf-wrap">
+            <div class="hyp-conf-label"><span>Evidence strength</span><span style="color:var(--blue)">10%</span></div>
+            <div class="hyp-conf-track"><div class="hyp-conf-fill" style="width:10%;background:var(--blue)"></div></div>
+          </div>
+        </div>
+        <span class="hyp-badge b-open">Open</span>
+      </div>
+      <div class="hyp-detail">
+        <div class="hyp-evidence">⚪ No data — not built yet · D7 currently 0–1% across rounds</div>
+        <p>Streak, badges, and daily missions planned based on Duolingo model but not built. Phase 2 backlog item. Critical dependency: gamification only drives D7 if users are already returning at D1. With D1 at 8%, there is no habit to reinforce yet. Blocked until onboarding fix succeeds.</p>
+        <div class="action">→ Blocked. Build streak MVP only after D1 sustainably reaches 15%+.</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="insight purple" style="margin-top:14px"><strong>Insight:</strong> 2 hypotheses are critical (chargeback unmeasured 5% evidence, D1 failing 90% evidence), 3 are active and testing (deep link 70%, audio demand 80%, paywall model 40%), 2 are validated (image ads 95%, Netflix onboarding 85%), 2 are open with minimal data (brand angle 10%, gamification 10%). Testing sequence: measure chargeback → fix content playback → then scale UA.</div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     ZONE 7 — LEADERSHIP SUMMARY (conclusions LAST)
+     ══════════════════════════════════════════════ -->
+<section id="zone7">
+  <div class="zone-label">Leadership Summary · Data-driven conclusions</div>
+  <div class="readout">
+    <div class="ro-title">PMF Scorecard — all signals at a glance</div>
+    <table class="scorecard">
+      <thead><tr><th>Metric</th><th class="num">Current</th><th class="num">Target</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Onboarding Completion</td><td class="num" style="font-weight:700">6.4%</td><td class="num">&gt;60%</td><td><span class="kpi-status stat-r" style="margin:0">Critical</span></td></tr>
+        <tr><td>D1 Retention</td><td class="num" style="font-weight:700">8%</td><td class="num">&gt;15%</td><td><span class="kpi-status stat-r" style="margin:0">Critical</span></td></tr>
+        <tr><td>Playtime D0 (TSPU)</td><td class="num" style="font-weight:700">2.7m</td><td class="num">&gt;5m</td><td><span class="kpi-status stat-y" style="margin:0">Warning</span></td></tr>
+        <tr><td>D7 Retention (churn)</td><td class="num" style="font-weight:700">1%</td><td class="num">&gt;10%</td><td><span class="kpi-status stat-r" style="margin:0">Critical</span></td></tr>
+        <tr><td>Best Creative D1</td><td class="num" style="font-weight:700">19%</td><td class="num">&gt;15%</td><td><span class="kpi-status stat-g" style="margin:0">Image-04 ✓</span></td></tr>
+        <tr><td>Chargeback Rate</td><td class="num" style="font-weight:700">?</td><td class="num">&lt;20%</td><td><span class="kpi-status" style="margin:0;background:#f0f0f0;color:var(--faint)">No data</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="ro-title" style="margin-top:4px">Product Sprint Backlog — Top 5 data-driven actions</div>
+    <div class="tbl-wrap" style="margin-bottom:6px">
+      <table class="sprint-tbl">
+        <thead>
+          <tr><th>Priority</th><th>Problem</th><th>Data Evidence</th><th>Proposed Fix</th><th>Expected Impact</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="p0">P0</span></td>
+            <td><strong>86.7% of users never try any content</strong><br><span style="color:var(--faint);font-size:11px">R7: 249 installs → 33 played (13.3%)</span></td>
+            <td style="font-size:11px;color:var(--muted)">🔵 Actual · R6: 30.9% vs R7: 13.3% — declining</td>
+            <td style="font-size:11px">Auto-play a 30s preview on first open. Remove friction from install → first listen.</td>
+            <td><span class="impact-g">Play rate +15–20%</span></td>
+          </tr>
+          <tr>
+            <td><span class="p0">P0</span></td>
+            <td><strong>51.5% of players don't complete</strong><br><span style="color:var(--faint);font-size:11px">R7: 33 started → 16 completed</span></td>
+            <td style="font-size:11px;color:var(--muted)">🔵 Actual · 48.5% completion among starters</td>
+            <td style="font-size:11px">Shorten summaries to &lt;5 min + add visual progress bar. Make "done" feel fast and rewarding.</td>
+            <td><span class="impact-g">Completion +15–20%</span></td>
+          </tr>
+          <tr>
+            <td><span class="p1">P1</span></td>
+            <td><strong>Unmet audio demand losing retention</strong><br><span style="color:var(--faint);font-size:11px">57% tapped Listen · "Listening" creative = 0% D1</span></td>
+            <td style="font-size:11px;color:var(--muted)">🔵 Fake-door · 101 Essays = 46 clicks</td>
+            <td style="font-size:11px">Produce Gemini TTS audio for top 6 books. Users who click Listen should hear audio immediately.</td>
+            <td><span class="impact-g">D1 +3–5%</span></td>
+          </tr>
+          <tr>
+            <td><span class="p1">P1</span></td>
+            <td><strong>Ad promise ≠ in-app content — wrong-fit users</strong><br><span style="color:var(--faint);font-size:11px">Image-04: 19% D1 · Sex Skill: 3% D1</span></td>
+            <td style="font-size:11px;color:var(--muted)">🔵 Actual CPI/D1 data across R6 + R7</td>
+            <td style="font-size:11px">Build deep link: ad → specific book shown in creative. Scale Image-04 to $300 test with content match.</td>
+            <td><span class="impact-g">D1 +5–7%</span></td>
+          </tr>
+          <tr>
+            <td><span class="p2">P2</span></td>
+            <td><strong>No return trigger — D7 trending to 0%</strong><br><span style="color:var(--faint);font-size:11px">R7: D7 = 1% · Concept: D7 = 0%</span></td>
+            <td style="font-size:11px;color:var(--muted)">🔵 Actual · D7 declining round-over-round</td>
+            <td style="font-size:11px">Add 3-day streak + push notification at peak hour 20:00–22:00 local time. Simple habit loop.</td>
+            <td><span class="impact-g">D7 +3–5%</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="ro-title" style="margin-top:4px">What the data says</div>
+    <div class="conclusion-cards">
+      <div class="conc"><div class="conc-dot" style="background:var(--bad)"></div><div><strong>Measure chargeback rate this week.</strong> It is the #1 unmeasured business risk. The Stripe monetization model depends on it staying under 20%. No scaling decision should happen until this number exists.</div></div>
+      <div class="conc"><div class="conc-dot" style="background:var(--bad)"></div><div><strong>Do not scale UA budget.</strong> D1 at 8% means every dollar of UA spend builds a leaky bucket. Fix the first-session experience (target: Complete Summary → 30%+ on D0) before spending more.</div></div>
+      <div class="conc"><div class="conc-dot" style="background:var(--warn)"></div><div><strong>Run one focused UA test in parallel.</strong> Scale Image-04 to $300 with deep link to matching books. Tests both the creative fix and deep link hypothesis — results in 5 days, no product sprint required.</div></div>
+    </div>
+
+    <div class="ro-footer">
+      <button class="btn-primary" onclick="window.print()">↓ Export Report</button>
+      <span style="font-size:11px;color:var(--faint);margin-left:8px">Linked to 18 hypothesis trees · Updated Mar 24, 2026</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     ZONE 8 — HYPOTHESIS TREES
+     ══════════════════════════════════════════════ -->
+<section id="zone8">
+  <div class="zone-label">Strategy Decision Trees · Data-driven flows · Key metrics at every node</div>
+
+  <div class="tree-tabs">
+    <div class="tree-tab active" onclick="showTree('t9',this)">UA Creative</div>
+    <div class="tree-tab" onclick="showTree('t10',this)">User Segmentation</div>
+    <div class="tree-tab" onclick="showTree('t11',this)">Onboarding</div>
+    <div class="tree-tab" onclick="showTree('t13',this)">Monetization</div>
+    <div class="tree-tab" onclick="showTree('t16',this)">Brand Positioning</div>
+    <div class="tree-tab" onclick="showTree('t18',this)">GTM Strategy</div>
+  </div>
+
+  <!-- ─── T9: UA Creative Framework ─── -->
+  <div id="tree-t9" class="tree-pane active">
+    <div class="tree-card">
+      <div class="tree-root">
+        <div class="tree-root-q">Which creative format + hook drives lowest CPI + highest D1 retention?</div>
+        <div class="tree-root-title">UA Creative Framework</div>
+        <div class="tree-root-val">19%</div>
+        <div class="tree-root-sub">Best D1 achieved · Image-04 R7 · n=32 (needs scale test)</div>
+      </div>
+      <div class="tree-arrow">▼ Format decision</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr">
+        <div class="tree-node good">
+          <div class="tn-lbl">Static Image ✓ Validated</div>
+          <div class="tn-val">$1.50–$5.00</div>
+          <div class="tn-sub">CPI range across all image creatives · consistent top performer</div>
+          <div class="tn-badge g">Locked — scale this</div>
+        </div>
+        <div class="tree-node bad">
+          <div class="tn-lbl">Video Creative — Dropped</div>
+          <div class="tn-val">—</div>
+          <div class="tn-sub">Underperformed vs static image on CPI + IPM across all rounds</div>
+          <div class="tn-badge r">Eliminated</div>
+        </div>
+      </div>
+      <div class="tree-arrow">▼ Hook type decision (image ads only)</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="tree-node bad">
+          <div class="tn-lbl">Sex / Curiosity hook</div>
+          <div class="tn-val" style="color:var(--bad)">3%</div>
+          <div class="tn-sub">D1 · CPI $1.50 · 131 installs</div>
+          <div class="tn-badge r">Wrong-fit · volume trap</div>
+        </div>
+        <div class="tree-node warn">
+          <div class="tn-lbl">Balanced authority</div>
+          <div class="tn-val" style="color:var(--warn)">13%</div>
+          <div class="tn-sub">D1 · CPI $4.00 · 86 installs</div>
+          <div class="tn-badge y">Near threshold · scale test</div>
+        </div>
+        <div class="tree-node good">
+          <div class="tn-lbl">Real person / authority</div>
+          <div class="tn-val" style="color:var(--good)">19%</div>
+          <div class="tn-sub">D1 · CPI $5.00 · 32 installs ⚠ small n</div>
+          <div class="tn-badge g">✓ Only creative above 15%</div>
+        </div>
+      </div>
+      <div class="tree-action">→ Next sprint: Scale Image-04 to $300 + deep link to matched book content · Target: D1 ≥15% at ≥100 installs</div>
+    </div>
+  </div>
+
+  <!-- ─── T10: User Segmentation ─── -->
+  <div id="tree-t10" class="tree-pane">
+    <div class="tree-card">
+      <div class="tree-root">
+        <div class="tree-root-q">Who is the right-fit BookWise user? Which segment has LTV &gt; CAC?</div>
+        <div class="tree-root-title">Market-led User Segmentation</div>
+        <div class="tree-root-val">3</div>
+        <div class="tree-root-sub">Distinct user segments identified from creative × retention data</div>
+      </div>
+      <div class="tree-arrow">▼ Segments by creative audience</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="tree-node bad">
+          <div class="tn-lbl">Volume Browser · Sex Skill R7</div>
+          <div class="tn-val" style="color:var(--bad)">3%</div>
+          <div class="tn-sub">D1 · CPI $1.50 · 131 installs · 3.1m TSPU</div>
+          <div class="tn-badge r">LTV negative at $90 price</div>
+        </div>
+        <div class="tree-node warn">
+          <div class="tn-lbl">Balanced Reader · Image-02</div>
+          <div class="tn-val" style="color:var(--warn)">13%</div>
+          <div class="tn-sub">D1 · CPI $4.00 · 86 installs · 2.8m TSPU</div>
+          <div class="tn-badge y">Near viable · best volume × quality</div>
+        </div>
+        <div class="tree-node good">
+          <div class="tn-lbl">Quality Reader · Image-04</div>
+          <div class="tn-val" style="color:var(--good)">19%</div>
+          <div class="tn-sub">D1 · CPI $5.00 · 32 installs · 0.8m TSPU</div>
+          <div class="tn-badge g">Right-fit · scale test pending</div>
+        </div>
+      </div>
+      <div class="tree-arrow">▼ Audio + content preference signal</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr">
+        <div class="tree-node neutral">
+          <div class="tn-lbl">Audio demand (R6 fake-door test)</div>
+          <div class="tn-val">57%</div>
+          <div class="tn-sub">of R6 users clicked Listen · "101 Essays" = 46 clicks · non-fiction / self-help</div>
+          <div class="tn-badge b">Quality + Balanced Reader signal</div>
+        </div>
+        <div class="tree-node bad">
+          <div class="tn-lbl">Audio delivery gap</div>
+          <div class="tn-val" style="color:var(--bad)">0%</div>
+          <div class="tn-sub">D1 for "Listening" creative (Concept) · users expected audio · product didn't deliver</div>
+          <div class="tn-badge r">Churn from unmet expectation</div>
+        </div>
+      </div>
+      <div class="tree-action">→ Target Quality + Balanced Reader segments · Scale Image-04 · Produce audio for top 6 books (Gemini TTS)</div>
+    </div>
+  </div>
+
+  <!-- ─── T11: Onboarding Optimization ─── -->
+  <div id="tree-t11" class="tree-pane">
+    <div class="tree-card">
+      <div class="tree-root">
+        <div class="tree-root-q">Where is the biggest drop-off in the user journey from ad click to Day 1 return?</div>
+        <div class="tree-root-title">Onboarding Optimization · R7 Full Funnel</div>
+        <div class="tree-root-val">59.8%</div>
+        <div class="tree-root-sub">Single biggest step drop · Press Listen → Play 5s (82 → 33 users)</div>
+      </div>
+      <div class="tree-arrow">▼ Pre-install pipeline</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="tree-node warn">
+          <div class="tn-lbl">Impression → Click (CTR)</div>
+          <div class="tn-val" style="color:var(--warn)">2%</div>
+          <div class="tn-sub">67,622 impressions → 1,605 clicks · stable across rounds</div>
+          <div class="tn-badge y">Consistent · not the bottleneck</div>
+        </div>
+        <div class="tree-node warn">
+          <div class="tn-lbl">Click → Install (CVR)</div>
+          <div class="tn-val" style="color:var(--warn)">16%</div>
+          <div class="tn-sub">1,605 clicks → 249 installs · declined from 38% (R2) to 14% (R6)</div>
+          <div class="tn-badge y">Declining CVR trend to watch</div>
+        </div>
+        <div class="tree-node warn">
+          <div class="tn-lbl">Install → Onboarding Done</div>
+          <div class="tn-val" style="color:var(--warn)">67%</div>
+          <div class="tn-sub">249 → 167 users complete questionnaire · acceptable step CVR</div>
+          <div class="tn-badge y">Not the critical bottleneck</div>
+        </div>
+      </div>
+      <div class="tree-arrow">▼ In-app engagement funnel (R7)</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="tree-node warn">
+          <div class="tn-lbl">Onboard → Book Selected</div>
+          <div class="tn-val" style="color:var(--warn)">65%</div>
+          <div class="tn-sub">167 → 109 users · 35% lost post-onboarding</div>
+          <div class="tn-badge y">Improvement possible</div>
+        </div>
+        <div class="tree-node warn">
+          <div class="tn-lbl">Book Select → Press Listen</div>
+          <div class="tn-val" style="color:var(--warn)">75%</div>
+          <div class="tn-sub">109 → 82 users · 25% selected but didn't press Listen</div>
+          <div class="tn-badge y">UX friction — reduce steps</div>
+        </div>
+        <div class="tree-node bad">
+          <div class="tn-lbl">Press Listen → Play 5s ← CRITICAL</div>
+          <div class="tn-val" style="color:var(--bad)">40%</div>
+          <div class="tn-sub">82 pressed → only 33 played · 60% who intended to listen, didn't hear audio</div>
+          <div class="tn-badge r">Biggest single drop · playback bug?</div>
+        </div>
+      </div>
+      <div class="tree-arrow">▼ Post-completion retention</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr">
+        <div class="tree-node warn">
+          <div class="tn-lbl">Play 5s → Complete Summary</div>
+          <div class="tn-val" style="color:var(--warn)">48.5%</div>
+          <div class="tn-sub">33 → 16 users · of those who start, ~half finish</div>
+          <div class="tn-badge y">Acceptable if play rate improves</div>
+        </div>
+        <div class="tree-node bad">
+          <div class="tn-lbl">Complete → D1 Return</div>
+          <div class="tn-val" style="color:var(--bad)">8%</div>
+          <div class="tn-sub">249 total → 20 return on D1 · only ~125% of completers return</div>
+          <div class="tn-badge r">Value not delivered on D0</div>
+        </div>
+      </div>
+      <div class="tree-action">→ Sprint priority: Fix Press Listen → Play 5s (auto-play + loading fix) → target Play rate 30%+ → then content quality → then retention</div>
+    </div>
+  </div>
+
+  <!-- ─── T13: Monetization ─── -->
+  <div id="tree-t13" class="tree-pane">
+    <div class="tree-card">
+      <div class="tree-root">
+        <div class="tree-root-q">Which monetization model gives the best ROAS signal speed while surviving unit economics?</div>
+        <div class="tree-root-title">Monetization Decision</div>
+        <div class="tree-root-val">$90</div>
+        <div class="tree-root-sub">Chosen price · Full paywall Day 1 · Direct Stripe payment</div>
+      </div>
+      <div class="tree-arrow">▼ Model comparison</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr">
+        <div class="tree-node good">
+          <div class="tn-lbl">Full Paywall Day 1 ← CHOSEN</div>
+          <div class="tn-val">$90</div>
+          <div class="tn-sub">One-time · ROAS signal on D1 · fast bidding cycle · chosen for speed of signal</div>
+          <div class="tn-badge g">Speed advantage for UA optimization</div>
+        </div>
+        <div class="tree-node warn">
+          <div class="tn-lbl">7-Day Free Trial — Not chosen</div>
+          <div class="tn-val">+7d</div>
+          <div class="tn-sub">1-week delay on payment signal · kills bidding optimization cycle · viable if D1 stays &lt;15%</div>
+          <div class="tn-badge y">Fallback if chargeback &gt;20%</div>
+        </div>
+      </div>
+      <div class="tree-arrow">▼ Viability conditions — all must be true to scale</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="tree-node bad">
+          <div class="tn-lbl">D1 Retention ≥ 15%?</div>
+          <div class="tn-val" style="color:var(--bad)">8%</div>
+          <div class="tn-sub">Current · needs to reach 15% for LTV &gt; CAC math to work at $3–5 CPI</div>
+          <div class="tn-badge r">❌ Not met · fix product first</div>
+        </div>
+        <div class="tree-node bad">
+          <div class="tn-lbl">Chargeback Rate &lt;20%?</div>
+          <div class="tn-val" style="color:var(--bad)">?</div>
+          <div class="tn-sub">Unmeasured · highest-risk unknown · $90 direct Stripe · if &gt;20% = model breaks</div>
+          <div class="tn-badge r">❌ Untested · pull data NOW</div>
+        </div>
+        <div class="tree-node warn">
+          <div class="tn-lbl">ROAS Signal Present?</div>
+          <div class="tn-val" style="color:var(--warn)">D1</div>
+          <div class="tn-sub">Payment on Day 1 gives daily ROAS signal · required for Meta bidding optimization</div>
+          <div class="tn-badge y">✓ Met · advantage over trial model</div>
+        </div>
+      </div>
+      <div class="tree-action">→ Immediate: Pull Stripe chargeback data · If &lt;20% + D1 reaches 15% → scale paywall. If chargeback &gt;20% → switch to 7-day trial model.</div>
+    </div>
+  </div>
+
+  <!-- ─── T16: Brand Positioning ─── -->
+  <div id="tree-t16" class="tree-pane">
+    <div class="tree-card">
+      <div class="tree-root">
+        <div class="tree-root-q">Which brand positioning angle drives lowest CPI + highest LTV in the US market?</div>
+        <div class="tree-root-title">Brand Positioning Hypothesis</div>
+        <div class="tree-root-val">5</div>
+        <div class="tree-root-sub">Candidate angles identified · 1 indirectly tested · none fully validated</div>
+      </div>
+      <div class="tree-arrow">▼ Candidate angles — tested vs untested</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="tree-node good">
+          <div class="tn-lbl">Authority / Real person → tested</div>
+          <div class="tn-val" style="color:var(--good)">19%</div>
+          <div class="tn-sub">D1 · Image-04 (real person photo) · best D1 in dataset · indirect signal only</div>
+          <div class="tn-badge g">Strongest signal so far</div>
+        </div>
+        <div class="tree-node warn">
+          <div class="tn-lbl">Balanced authority → tested</div>
+          <div class="tn-val" style="color:var(--warn)">13%</div>
+          <div class="tn-sub">D1 · Image-02 · near-viable · best volume × quality balance</div>
+          <div class="tn-badge y">2nd best · consistent performer</div>
+        </div>
+        <div class="tree-node bad">
+          <div class="tn-lbl">Sex / Curiosity → tested</div>
+          <div class="tn-val" style="color:var(--bad)">3%</div>
+          <div class="tn-sub">D1 · Sex Skill creative · attracts wrong-fit users · LTV negative</div>
+          <div class="tn-badge r">Eliminated — wrong audience</div>
+        </div>
+      </div>
+      <div class="tree-arrow">▼ Untested angles</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="tree-node open">
+          <div class="tn-lbl">Time compression</div>
+          <div class="tn-val">—</div>
+          <div class="tn-sub">"Book in 7 minutes" · speed angle · not tested · audio demand may support this</div>
+          <div class="tn-badge b">Open · test next</div>
+        </div>
+        <div class="tree-node open">
+          <div class="tn-lbl">Transformation</div>
+          <div class="tn-val">—</div>
+          <div class="tn-sub">"Change your thinking" · self-improvement frame · not tested</div>
+          <div class="tn-badge b">Open · test in R8+</div>
+        </div>
+        <div class="tree-node open">
+          <div class="tn-lbl">Identity / Status</div>
+          <div class="tn-val">—</div>
+          <div class="tn-sub">"People who read" · social identity · not tested</div>
+          <div class="tn-badge b">Open · longer-term test</div>
+        </div>
+      </div>
+      <div class="tree-action">→ Authority angle leading (Image-04: 19% D1). Let 3 more rounds of ad data vote before committing. Next creative test: "Time Compression" angle with real-person photo.</div>
+    </div>
+  </div>
+
+  <!-- ─── T18: GTM Strategy ─── -->
+  <div id="tree-t18" class="tree-pane">
+    <div class="tree-card">
+      <div class="tree-root">
+        <div class="tree-root-q">What is the correct sequencing to achieve profitable scale in the US market?</div>
+        <div class="tree-root-title">Go-to-Market Growth Strategy</div>
+        <div class="tree-root-val">Phase 1</div>
+        <div class="tree-root-sub">Current stage · Fix product before scaling spend</div>
+      </div>
+      <div class="tree-arrow">▼ 4-phase growth sequence</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr 1fr 1fr">
+        <div class="tree-node bad">
+          <div class="tn-lbl">Phase 1 — NOW · Fix Product</div>
+          <div class="tn-val" style="color:var(--bad)">8%</div>
+          <div class="tn-sub">D1 current · target: ≥15%<br>Chargeback: ? · target: &lt;20%<br>Play rate R7: 13.3% · target: 30%+</div>
+          <div class="tn-badge r">In progress · blocking scale</div>
+        </div>
+        <div class="tree-node warn">
+          <div class="tn-lbl">Phase 2 — Validate UA</div>
+          <div class="tn-val" style="color:var(--warn)">$300</div>
+          <div class="tn-sub">Image-04 scale test + deep link<br>CPI target: $3.50<br>D1 target: ≥15% at n=100</div>
+          <div class="tn-badge y">Starts when Phase 1 done</div>
+        </div>
+        <div class="tree-node open">
+          <div class="tn-lbl">Phase 3 — Audio Rollout</div>
+          <div class="tn-val">6</div>
+          <div class="tn-sub">Books with Gemini TTS<br>Expected D1 uplift: +3–5%<br>57% audio demand signal</div>
+          <div class="tn-badge b">Queued · after Phase 2</div>
+        </div>
+        <div class="tree-node open">
+          <div class="tn-lbl">Phase 4 — Scale</div>
+          <div class="tn-val">10%</div>
+          <div class="tn-sub">D7 target for habit loop<br>Streak + push notifications<br>CAC payback &lt;90 days</div>
+          <div class="tn-badge b">Future · after D1 fix</div>
+        </div>
+      </div>
+      <div class="tree-arrow">▼ Scale gate — all 3 must be green before increasing UA budget</div>
+      <div class="tree-level" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="tree-node bad">
+          <div class="tn-lbl">Gate 1: D1 ≥ 15%</div>
+          <div class="tn-val" style="color:var(--bad)">8%</div>
+          <div class="tn-sub">Current · 4× below EdTech benchmark of 35%</div>
+          <div class="tn-badge r">❌ Not met</div>
+        </div>
+        <div class="tree-node bad">
+          <div class="tn-lbl">Gate 2: Chargeback &lt;20%</div>
+          <div class="tn-val" style="color:var(--bad)">?</div>
+          <div class="tn-sub">Unknown · Stripe data not pulled · highest urgency</div>
+          <div class="tn-badge r">❌ Unmeasured</div>
+        </div>
+        <div class="tree-node warn">
+          <div class="tn-lbl">Gate 3: CPI &lt;$4.00</div>
+          <div class="tn-val" style="color:var(--warn)">$2.78</div>
+          <div class="tn-sub">R7 avg CPI · below $4 threshold · but driven by wrong-fit Sex Skill creative</div>
+          <div class="tn-badge y">Met on paper · quality issue</div>
+        </div>
+      </div>
+      <div class="tree-action">→ No budget increase until Gates 1 + 2 are met. Run Phase 1 sprints in parallel: auto-play fix + chargeback data + Image-04 $300 test.</div>
+    </div>
+  </div>
+
+</section>
+
+</div></main>
+
+<script>
+/* ── Chart defaults ── */
+Chart.defaults.color = '#999';
+Chart.defaults.borderColor = 'rgba(0,0,0,.07)';
+Chart.defaults.font.family = "'Inter', -apple-system, sans-serif";
+
+/* ── Nav ── */
+function setNav(el){document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('active'));el.classList.add('active')}
+
+/* ── Funnel toggle — also toggles drop-off cards ── */
+function showFunnel(id,el){
+  document.querySelectorAll('.fn-rows').forEach(r=>r.style.display='none');
+  document.getElementById('funnel-'+id).style.display='flex';
+  document.querySelectorAll('[id^="do-"]').forEach(r=>r.style.display='none');
+  document.getElementById('do-'+id).style.display='grid';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ── Strategy Tree tabs ── */
+function showTree(id,el){
+  document.querySelectorAll('.tree-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tree-'+id).classList.add('active');
+  document.querySelectorAll('.tree-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ── Hypothesis expand ── */
+function toggleHyp(c){const o=c.classList.contains('expanded');document.querySelectorAll('.hyp-card.expanded').forEach(x=>x.classList.remove('expanded'));if(!o)c.classList.add('expanded')}
+
+const rounds=['R2','R3','R5','R6','R7','Concept'];
+const blue='#3b82f6',purple='#8b5cf6',teal='#14b8a6',red='#ef4444',amber='#f59e0b',green='#22c55e';
+const grid='rgba(0,0,0,.07)';
+
+/* ④ Audio Demand (User Behavior zone) */
+new Chart(document.getElementById('audioChart'),{
+  type:'bar',
+  data:{
+    labels:['101 Essays','Atomic Habits','Deep Work','Think Fast & Slow','The Secret','Other titles'],
+    datasets:[{
+      label:'Audio clicks',
+      data:[46,31,24,18,14,9],
+      backgroundColor:['rgba(59,130,246,.75)','rgba(59,130,246,.55)','rgba(59,130,246,.45)','rgba(59,130,246,.38)','rgba(59,130,246,.32)','rgba(59,130,246,.22)'],
+      borderColor:['#3b82f6','#3b82f6','#3b82f6','#3b82f6','#3b82f6','#3b82f6'],
+      borderWidth:1.5,borderRadius:5
+    }]
+  },
+  options:{
+    indexAxis:'y',
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>{
+        const badges=['🔵 Actual','🟡 Inferred','🟡 Inferred','🟡 Inferred','🟡 Inferred','🟡 Inferred'];
+        return ` ${ctx.raw} clicks  ${badges[ctx.dataIndex]}`;
+      }}}
+    },
+    scales:{
+      x:{beginAtZero:true,max:55,ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,.07)'},title:{display:true,text:'Audio button clicks (fake-door test)',font:{size:10},color:'#999'}},
+      y:{ticks:{font:{size:11}},grid:{display:false}}
+    }
+  }
+});
+
+/* ④b Audio Context — R6 creative mix */
+new Chart(document.getElementById('audioContextChart'),{
+  type:'bar',
+  data:{
+    labels:['Image-02','Image-04','VD-6 Feature 2','VD-7minsprep'],
+    datasets:[{
+      label:'R6 installs',
+      data:[131,61,49,6],
+      backgroundColor:['rgba(59,130,246,.7)','rgba(34,197,94,.7)','rgba(245,158,11,.55)','rgba(148,163,184,.55)'],
+      borderColor:['#3b82f6','#22c55e','#f59e0b','#94a3b8'],
+      borderWidth:1.5,borderRadius:5
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>{
+        const pct=Math.round(ctx.raw/230*100);
+        return ` ${ctx.raw} installs (${pct}% of R6)`;
+      }}}
+    },
+    scales:{
+      y:{beginAtZero:true,ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,.07)'},title:{display:true,text:'Installs in R6 (audio test period)',font:{size:10},color:'#999'}},
+      x:{ticks:{font:{size:11}},grid:{display:false}}
+    }
+  }
+});
+
+/* ① Retention Trend */
+new Chart(document.getElementById('retChart'),{
+  type:'line',
+  data:{
+    labels:rounds,
+    datasets:[
+      {label:'D1%',data:[null,5,9,10,8,5],borderColor:blue,backgroundColor:'rgba(59,130,246,.08)',fill:true,tension:.4,pointRadius:5,pointBackgroundColor:blue,borderWidth:2.5},
+      {label:'D3%',data:[null,6,5,7,2,4],borderColor:purple,backgroundColor:'transparent',tension:.4,borderDash:[4,4],pointRadius:4,pointBackgroundColor:purple,borderWidth:1.5},
+      {label:'D7%',data:[null,4,5,null,1,0],borderColor:teal,backgroundColor:'transparent',tension:.4,borderDash:[2,3],pointRadius:4,pointBackgroundColor:teal,borderWidth:1.5},
+      {label:'Min viable D1 (15%)',data:[15,15,15,15,15,15],borderColor:'rgba(239,68,68,.45)',backgroundColor:'transparent',borderDash:[8,4],pointRadius:0,borderWidth:1.5}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:10,padding:8}}},
+    scales:{y:{beginAtZero:true,max:38,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:grid}},x:{ticks:{font:{size:10}},grid:{color:grid}}}
+  }
+});
+
+/* ② CPI vs D1 Bubble */
+new Chart(document.getElementById('scatterChart'),{
+  type:'bubble',
+  data:{datasets:[
+    {label:'Sex Skill (R7)',data:[{x:1.5,y:3,r:16}],backgroundColor:'rgba(239,68,68,.65)',borderColor:red,borderWidth:1.5},
+    {label:'Image-02 (R7)',data:[{x:4.0,y:13,r:19}],backgroundColor:'rgba(59,130,246,.65)',borderColor:blue,borderWidth:1.5},
+    {label:'Image-04 (R7)',data:[{x:5.0,y:19,r:15}],backgroundColor:'rgba(34,197,94,.65)',borderColor:green,borderWidth:1.5},
+    {label:'Sex Skill 2 (Conc)',data:[{x:2.9,y:5,r:17}],backgroundColor:'rgba(245,158,11,.55)',borderColor:amber,borderWidth:1.5},
+    {label:'Big Impact (Conc)',data:[{x:4.4,y:5,r:12}],backgroundColor:'rgba(139,92,246,.55)',borderColor:purple,borderWidth:1.5}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10,padding:6}},
+      tooltip:{callbacks:{label:ctx=>{const d=ctx.raw;return ` CPI: $${d.x} · D1: ${d.y}%`}}}
+    },
+    scales:{
+      x:{min:0,max:6.5,title:{display:true,text:'CPI ($) — lower is better',font:{size:10},color:'#999'},ticks:{callback:v=>'$'+v,font:{size:10}},grid:{color:grid}},
+      y:{min:0,max:30,title:{display:true,text:'D1 Retention % — higher is better',font:{size:10},color:'#999'},ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:grid}}
+    }
+  }
+});
+
+/* ③ Volume + TSPU */
+new Chart(document.getElementById('volChart'),{
+  type:'bar',
+  data:{
+    labels:rounds,
+    datasets:[
+      {label:'Installs',data:[10,81,229,230,249,155],backgroundColor:'rgba(59,130,246,.15)',borderColor:blue,borderWidth:1.5,borderRadius:5,yAxisID:'y'},
+      {label:'TSPU (min)',data:[5.3,3.37,1.65,2.25,2.70,0.87],type:'line',borderColor:purple,backgroundColor:'transparent',tension:.4,pointRadius:5,borderWidth:2.5,yAxisID:'y1',
+       pointBackgroundColor:[green,green,red,amber,amber,red]}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:10,padding:8}}},
+    scales:{
+      y:{beginAtZero:true,ticks:{font:{size:10}},grid:{color:grid},title:{display:true,text:'Installs',font:{size:10},color:blue}},
+      y1:{beginAtZero:true,position:'right',ticks:{callback:v=>v+'m',font:{size:10}},grid:{display:false},title:{display:true,text:'TSPU (min)',font:{size:10},color:purple}},
+      x:{ticks:{font:{size:10}},grid:{color:grid}}
+    }
+  }
+});
+</script>
+</body>
+</html>
